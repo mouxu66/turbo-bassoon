@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - mouxu的LoL分析站{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-dragon me-2"></i>欢迎来到英雄联盟数据分析站
+        </h1>
+        <p class="lead mb-4">专为 mouxu 定制的LoL数据分析平台</p>
+        
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card-lol text-center p-3">
+                    <div style="font-size: 2.5em; color: #ffd700;">
+                        <i class="fas fa-helmet-battle"></i>
+                    </div>
+                    <div class="stat-number">{{ item_count }}</div>
+                    <p>装备数据</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card-lol text-center p-3">
+                    <div style="font-size: 2.5em; color: #ffd700;">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="stat-number">{{ match_count }}</div>
+                    <p>比赛记录</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card-lol text-center p-3">
+                    <div style="font-size: 2.5em; color: #ffd700;">
+                        <i class="fas fa-upload"></i>
+                    </div>
+                    <div class="stat-number">CSV</div>
+                    <p>数据导入</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card-lol text-center p-3">
+                    <div style="font-size: 2.5em; color: #ffd700;">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div class="stat-number">API</div>
+                    <p>数据导出</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- 快速操作 -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card-lol p-4">
+                <h3 class="mb-4" style="color: #ffd700;">
+                    <i class="fas fa-bolt me-2"></i>快速开始
+                </h3>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="p-3">
+                            <h5><i class="fas fa-upload me-2"></i>1. 准备数据文件</h5>
+                            <p>准备好你的 MatchTbl.csv 文件</p>
+                            <p class="small text-muted">需要包含: MatchId, Patch, QueueType, RankFk, GameDuration 列</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3">
+                            <h5><i class="fas fa-chart-line me-2"></i>2. 上传并分析</h5>
+                            <p>上传CSV文件，系统自动处理和分析</p>
+                            <a href="/match_analysis" class="btn btn-lol mt-2">
+                                <i class="fas fa-play me-2"></i>开始分析
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 功能模块 -->
+    <div class="row mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card-lol p-4 h-100">
+                <div class="text-center mb-3">
+                    <i class="fas fa-helmet-battle" style="font-size: 3em; color: #ffd700;"></i>
+                </div>
+                <h4 class="text-center">装备查询</h4>
+                <p class="text-center">查看所有装备的详细属性和价格</p>
+                <div class="text-center mt-3">
+                    <a href="/items" class="btn btn-lol w-100">
+                        <i class="fas fa-search me-2"></i>查看装备
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card-lol p-4 h-100">
+                <div class="text-center mb-3">
+                    <i class="fas fa-chart-line" style="font-size: 3em; color: #ffd700;"></i>
+                </div>
+                <h4 class="text-center">比赛分析</h4>
+                <p class="text-center">上传比赛数据，生成可视化分析报告</p>
+                <div class="text-center mt-3">
+                    <a href="/match_analysis" class="btn btn-lol w-100">
+                        <i class="fas fa-chart-bar me-2"></i>开始分析
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card-lol p-4 h-100">
+                <div class="text-center mb-3">
+                    <i class="fas fa-cogs" style="font-size: 3em; color: #ffd700;"></i>
+                </div>
+                <h4 class="text-center">API接口</h4>
+                <p class="text-center">提供RESTful API接口，支持数据导入导出</p>
+                <div class="text-center mt-3">
+                    <button class="btn btn-lol w-100" onclick="showAPIInfo()">
+                        <i class="fas fa-code me-2"></i>查看API
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 系统信息 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card-lol p-4">
+                <h4><i class="fas fa-info-circle me-2"></i>系统信息</h4>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <p><i class="fas fa-user me-2"></i>用户名: <strong>mouxu</strong></p>
+                        <p><i class="fas fa-globe me-2"></i>网站地址: <a href="https://mouxu.pythonanywhere.com" style="color: var(--lol-gold);">https://mouxu.pythonanywhere.com</a></p>
+                        <p><i class="fas fa-database me-2"></i>数据库: SQLite (本地存储)</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><i class="fas fa-server me-2"></i>部署平台: PythonAnywhere</p>
+                        <p><i class="fas fa-code me-2"></i>技术栈: Flask + Pandas + SQLite</p>
+                        <p><i class="fas fa-clock me-2"></i>当前时间: {{ datetime.now().strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showAPIInfo() {
+        const apiInfo = `
+            <div class="card-lol p-4 mt-3">
+                <h5><i class="fas fa-code me-2"></i>API接口列表</h5>
+                <div class="table-responsive">
+                    <table class="table table-lol mt-2">
+                        <tr>
+                            <td><code>GET /api/items/list</code></td>
+                            <td>获取装备列表</td>
+                        </tr>
+                        <tr>
+                            <td><code>POST /api/match/upload</code></td>
+                            <td>上传比赛数据</td>
+                        </tr>
+                        <tr>
+                            <td><code>GET /api/match/stats</code></td>
+                            <td>获取比赛统计</td>
+                        </tr>
+                        <tr>
+                            <td><code>GET /api/match/export</code></td>
+                            <td>导出比赛数据</td>
+                        </tr>
+                        <tr>
+                            <td><code>POST /api/import/items</code></td>
+                            <td>导入装备数据</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        // 创建模态框显示API信息
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content" style="background: linear-gradient(135deg, rgba(30, 35, 40, 0.95), rgba(20, 25, 30, 0.95)); color: var(--lol-light);">
+                    <div class="modal-header" style="border-bottom: 1px solid rgba(200, 170, 110, 0.3);">
+                        <h5 class="modal-title" style="color: #ffd700;">
+                            <i class="fas fa-code me-2"></i>API接口文档
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1);"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${apiInfo}
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid rgba(200, 170, 110, 0.3);">
+                        <button type="button" class="btn btn-lol" data-bs-dismiss="modal">关闭</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+        
+        // 模态框关闭后移除
+        modal.addEventListener('hidden.bs.modal', function () {
+            document.body.removeChild(modal);
+        });
+    }
+</script>
+{% endblock %}

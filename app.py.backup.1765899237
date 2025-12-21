@@ -1,0 +1,809 @@
+# 在 app.py 的顶部添加（在现有import语句后面）
+import sys
+import os
+
+# ========== 性能优化 ==========
+# 禁用调试模式
+import flask
+flask.cli.show_server_banner = lambda *args: None
+
+# 减少日志输出
+import logging
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+
+# 限制数据库连接
+import sqlite3
+import atexit
+
+# 连接池管理
+_db_connections = {}
+
+def get_db_connection():
+    """获取数据库连接（带连接池）"""
+    import threading
+    thread_id = threading.get_ident()
+
+    if thread_id not in _db_connections:
+        _db_connections[thread_id] = sqlite3.connect(
+            DB_PATH,
+            timeout=10,
+            check_same_thread=False
+        )
+        _db_connections[thread_id].row_factory = sqlite3.Row
+
+    return _db_connections[thread_id]
+
+def close_db_connections():
+    """关闭所有数据库连接"""
+    for conn in _db_connections.values():
+        try:
+            conn.close()
+        except:
+            pass
+    _db_connections.clear()
+
+atexit.register(close_db_connections)
+
+# ========== 原来的代码继续... ==========
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
+import sqlite3
+import os
+import csv
+import json
+import time
+import pandas as pd
+import numpy as np
+from datetime import datetime
+import io
+import hashlib
+from functools import lru_cache
+
+# ========== 应用配置 ==========
+app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
+app.config['SECRET_KEY'] = 'mouxu-lol-site-2024-secret'
+
+# PythonAnywhere路径配置
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'instance', 'lol_data.db')
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+
+# 确保目录存在
+os.makedirs(os.path.join(BASE_DIR, 'instance'), exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# ========== 数据库初始化 ==========
+def init_database():
+    """初始化数据库"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    # 装备表
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id INTEGER,
+        name TEXT NOT NULL,
+        gold_total INTEGER DEFAULT 0,
+        gold_sell INTEGER DEFAULT 0,
+        ad REAL DEFAULT 0,
+        as_ REAL DEFAULT 0,
+        crit REAL DEFAULT 0,
+        ls REAL DEFAULT 0,
+        apen REAL DEFAULT 0,
+        ap REAL DEFAULT 0,
+        ah REAL DEFAULT 0,
+        mana REAL DEFAULT 0,
+        mp5 REAL DEFAULT 0,
+        hsp REAL DEFAULT 0,
+        ovamp REAL DEFAULT 0,
+        mpen REAL DEFAULT 0,
+        health REAL DEFAULT 0,
+        armor REAL DEFAULT 0,
+        mr REAL DEFAULT 0,
+        hp5 REAL DEFAULT 0,
+        ms REAL DEFAULT 0,
+        maps TEXT DEFAULT 'All',
+        description TEXT DEFAULT '',
+        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(item_id, name)
+    )
+    ''')
+
+    # 比赛数据表
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS matches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        match_id TEXT UNIQUE,
+        patch TEXT,
+        queue_type TEXT,
+        rank_fk INTEGER,
+        game_duration INTEGER,
+        game_duration_minutes REAL,
+        major_patch TEXT,
+        patch_short TEXT,
+        rank_category TEXT,
+        uploaded_by TEXT DEFAULT 'mouxu',
+        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_analyzed BOOLEAN DEFAULT 0
+    )
+    ''')
+
+    # 分析结果缓存
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS analysis_cache (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cache_key TEXT UNIQUE,
+        data_type TEXT,
+        data_json TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        expires_at TIMESTAMP
+    )
+    ''')
+
+    conn.commit()
+    conn.close()
+    print(f"✅ 数据库初始化完成: {DB_PATH}")
+
+# ========== 数据导入函数 ==========
+def import_items_from_csv(filepath='ItemTbl.csv'):
+    """导入装备数据"""
+    try:
+        if not os.path.exists(filepath):
+            return {'success': False, 'error': f'文件不存在: {filepath}'}
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        imported = 0
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+            if content.startswith('\ufeff'):
+                content = content[1:]
+
+            reader = csv.reader(content.strip().splitlines())
+            next(reader)  # 跳过标题行
+
+            for row in reader:
+                if len(row) >= 2:
+                    item_id = int(row[0]) if row[0].isdigit() else 0
+                    name = row[1].strip()
+
+                    if item_id and name:
+                        cursor.execute('''
+                            INSERT OR IGNORE INTO items (item_id, name)
+                            VALUES (?, ?)
+                        ''', (item_id, name))
+
+                        if cursor.rowcount == 1:
+                            imported += 1
+
+        conn.commit()
+
+        # 更新统计
+        cursor.execute("SELECT COUNT(*) FROM items")
+        total = cursor.fetchone()[0]
+
+        conn.close()
+
+        return {
+            'success': True,
+            'imported': imported,
+            'total': total,
+            'message': f'成功导入 {imported} 件装备'
+        }
+
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+def import_item_stats(filepath='LOL_items_stats.csv'):
+    """导入装备详细属性"""
+    try:
+        if not os.path.exists(filepath):
+            return {'success': False, 'error': f'文件不存在: {filepath}'}
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        updated = 0
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+            if content.startswith('\ufeff'):
+                content = content[1:]
+
+            reader = csv.reader(content.strip().splitlines(), delimiter=';')
+            headers = next(reader)
+
+            for row in reader:
+                if len(row) >= 1:
+                    name = row[0].strip()
+                    if not name:
+                        continue
+
+                    # 解析所有属性
+                    cost = int(row[1]) if len(row) > 1 and row[1] and row[1].isdigit() else 0
+                    sell = int(row[2]) if len(row) > 2 and row[2] and row[2].isdigit() else 0
+
+                    ad = float(row[3]) if len(row) > 3 and row[3] else 0
+                    as_ = float(row[4]) if len(row) > 4 and row[4] else 0
+                    crit = float(row[5]) if len(row) > 5 and row[5] else 0
+                    ls = float(row[6]) if len(row) > 6 and row[6] else 0
+                    apen = float(row[7]) if len(row) > 7 and row[7] else 0
+                    ap = float(row[8]) if len(row) > 8 and row[8] else 0
+                    ah = float(row[9]) if len(row) > 9 and row[9] else 0
+                    mana = float(row[10]) if len(row) > 10 and row[10] else 0
+                    mp5 = float(row[11]) if len(row) > 11 and row[11] else 0
+                    hsp = float(row[12]) if len(row) > 12 and row[12] else 0
+                    ovamp = float(row[13]) if len(row) > 13 and row[13] else 0
+                    mpen = float(row[14]) if len(row) > 14 and row[14] else 0
+                    health = float(row[15]) if len(row) > 15 and row[15] else 0
+                    armor = float(row[16]) if len(row) > 16 and row[16] else 0
+                    mr = float(row[17]) if len(row) > 17 and row[17] else 0
+                    hp5 = float(row[18]) if len(row) > 18 and row[18] else 0
+                    ms = float(row[19]) if len(row) > 19 and row[19] else 0
+                    maps = row[20] if len(row) > 20 else 'All'
+
+                    # 更新装备数据
+                    cursor.execute('''
+                        UPDATE items
+                        SET gold_total = ?, gold_sell = ?, ad = ?, as_ = ?, crit = ?, ls = ?,
+                            apen = ?, ap = ?, ah = ?, mana = ?, mp5 = ?, hsp = ?,
+                            ovamp = ?, mpen = ?, health = ?, armor = ?, mr = ?,
+                            hp5 = ?, ms = ?, maps = ?
+                        WHERE name = ?
+                    ''', (cost, sell, ad, as_, crit, ls, apen, ap, ah, mana,
+                          mp5, hsp, ovamp, mpen, health, armor, mr, hp5, ms, maps, name))
+
+                    if cursor.rowcount > 0:
+                        updated += 1
+
+        conn.commit()
+        conn.close()
+
+        return {
+            'success': True,
+            'updated': updated,
+            'message': f'更新了 {updated} 件装备的属性数据'
+        }
+
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+# ========== 比赛数据处理 ==========
+def process_match_file(file_content, filename):
+    """处理上传的比赛数据文件"""
+    try:
+        # 检查文件编码
+        if file_content.startswith('\ufeff'):
+            file_content = file_content[1:]
+
+        # 使用pandas读取CSV
+        df = pd.read_csv(io.StringIO(file_content))
+
+        # 检查必要的列
+        required_cols = ['MatchId', 'Patch', 'QueueType', 'RankFk', 'GameDuration']
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            return {'success': False, 'error': f'缺少必要的列: {missing_cols}'}
+
+        # 清理数据
+        df = df.dropna(subset=['MatchId'])
+        df['MatchId'] = df['MatchId'].astype(str).str.strip()
+        df['Patch'] = df['Patch'].astype(str).str.strip()
+        df['QueueType'] = df['QueueType'].astype(str).str.strip()
+        df['RankFk'] = pd.to_numeric(df['RankFk'], errors='coerce').fillna(0).astype(int)
+        df['GameDuration'] = pd.to_numeric(df['GameDuration'], errors='coerce').fillna(0).astype(int)
+
+        # 添加计算列
+        df['GameDuration_Minutes'] = (df['GameDuration'] / 60).round(2)
+        df['MajorPatch'] = df['Patch'].str.extract(r'(\d+\.\d+)')
+        df['Patch_Short'] = df['Patch'].apply(lambda x: '.'.join(str(x).split('.')[:2]))
+
+        # 段位分类
+        def get_rank_category(rank_fk):
+            rank_map = {
+                0: '未定级/普通',
+                1: '青铜',
+                2: '白银',
+                3: '黄金',
+                4: '铂金',
+                5: '钻石',
+                6: '大师',
+                7: '宗师',
+                8: '王者'
+            }
+            return rank_map.get(rank_fk, f'未知({rank_fk})')
+
+        df['Rank_Category'] = df['RankFk'].apply(get_rank_category)
+
+        # 保存到数据库
+        conn = sqlite3.connect(DB_PATH)
+        imported = 0
+        skipped = 0
+
+        for _, row in df.iterrows():
+            try:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT OR IGNORE INTO matches
+                    (match_id, patch, queue_type, rank_fk, game_duration,
+                     game_duration_minutes, major_patch, patch_short, rank_category)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    row['MatchId'], row['Patch'], row['QueueType'],
+                    row['RankFk'], row['GameDuration'], row['GameDuration_Minutes'],
+                    row['MajorPatch'], row['Patch_Short'], row['Rank_Category']
+                ))
+
+                if cursor.rowcount == 1:
+                    imported += 1
+                else:
+                    skipped += 1
+            except:
+                skipped += 1
+
+        conn.commit()
+        conn.close()
+
+        # 生成统计信息
+        stats = {
+            'filename': filename,
+            'total_records': len(df),
+            'imported': imported,
+            'skipped': skipped,
+            'success_rate': round(imported / len(df) * 100, 2) if len(df) > 0 else 0,
+            'avg_duration': round(df['GameDuration_Minutes'].mean(), 2),
+            'min_duration': df['GameDuration_Minutes'].min(),
+            'max_duration': df['GameDuration_Minutes'].max(),
+            'unique_modes': df['QueueType'].nunique(),
+            'unique_patches': df['Patch_Short'].nunique(),
+            'unique_ranks': df['Rank_Category'].nunique(),
+            'data_preview': df.head(10).to_dict('records')
+        }
+
+        return {'success': True, 'stats': stats}
+
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+# ========== 数据分析函数 ==========
+@lru_cache(maxsize=32)
+def get_match_statistics():
+    """获取比赛数据统计（带缓存）"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # 基础统计
+        cursor.execute("SELECT COUNT(*) FROM matches")
+        total = cursor.fetchone()[0]
+
+        if total == 0:
+            return None
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) as total,
+                AVG(game_duration_minutes) as avg_duration,
+                MIN(game_duration_minutes) as min_duration,
+                MAX(game_duration_minutes) as max_duration,
+                COUNT(DISTINCT queue_type) as unique_modes,
+                COUNT(DISTINCT patch_short) as unique_patches,
+                COUNT(DISTINCT rank_category) as unique_ranks
+            FROM matches
+        """)
+
+        row = cursor.fetchone()
+        basic_stats = {
+            'total': row[0],
+            'avg_duration': round(row[1], 2) if row[1] else 0,
+            'min_duration': row[2] if row[2] else 0,
+            'max_duration': row[3] if row[3] else 0,
+            'unique_modes': row[4],
+            'unique_patches': row[5],
+            'unique_ranks': row[6]
+        }
+
+        # 模式分布
+        cursor.execute("""
+            SELECT queue_type, COUNT(*) as count,
+                   ROUND(AVG(game_duration_minutes), 2) as avg_duration
+            FROM matches
+            GROUP BY queue_type
+            ORDER BY count DESC
+        """)
+        modes = cursor.fetchall()
+
+        # 段位分布
+        cursor.execute("""
+            SELECT rank_category, COUNT(*) as count,
+                   ROUND(AVG(game_duration_minutes), 2) as avg_duration
+            FROM matches
+            WHERE rank_category != '未知(0)'
+            GROUP BY rank_category
+            ORDER BY
+                CASE rank_category
+                    WHEN '王者' THEN 1
+                    WHEN '宗师' THEN 2
+                    WHEN '大师' THEN 3
+                    WHEN '钻石' THEN 4
+                    WHEN '铂金' THEN 5
+                    WHEN '黄金' THEN 6
+                    WHEN '白银' THEN 7
+                    WHEN '青铜' THEN 8
+                    WHEN '未定级/普通' THEN 9
+                    ELSE 10
+                END
+        """)
+        ranks = cursor.fetchall()
+
+        # 版本趋势
+        cursor.execute("""
+            SELECT patch_short, COUNT(*) as count,
+                   ROUND(AVG(game_duration_minutes), 2) as avg_duration
+            FROM matches
+            WHERE patch_short IS NOT NULL AND patch_short != ''
+            GROUP BY patch_short
+            ORDER BY patch_short
+        """)
+        versions = cursor.fetchall()
+
+        # 时长分布
+        cursor.execute("""
+            SELECT
+                CASE
+                    WHEN game_duration_minutes < 15 THEN '0-15分钟'
+                    WHEN game_duration_minutes < 25 THEN '15-25分钟'
+                    WHEN game_duration_minutes < 35 THEN '25-35分钟'
+                    ELSE '35+分钟'
+                END as duration_range,
+                COUNT(*) as count,
+                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM matches), 2) as percentage
+            FROM matches
+            GROUP BY duration_range
+            ORDER BY
+                CASE duration_range
+                    WHEN '0-15分钟' THEN 1
+                    WHEN '15-25分钟' THEN 2
+                    WHEN '25-35分钟' THEN 3
+                    WHEN '35+分钟' THEN 4
+                END
+        """)
+        duration_dist = cursor.fetchall()
+
+        conn.close()
+
+        return {
+            'basic': basic_stats,
+            'modes': modes,
+            'ranks': ranks,
+            'versions': versions,
+            'duration_dist': duration_dist,
+            'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+    except Exception as e:
+        print(f"统计错误: {e}")
+        return None
+
+# ========== 网页路由 ==========
+@app.route('/')
+def home():
+    """首页"""
+    init_database()
+
+    # 获取统计数据
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM items")
+    item_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM matches")
+    match_count = cursor.fetchone()[0]
+
+    conn.close()
+
+    return render_template('index.html',
+                         item_count=item_count,
+                         match_count=match_count,
+                         username='mouxu',
+                         site_url='mouxu.pythonanywhere.com')
+
+@app.route('/items')
+def items_page():
+    """装备页面"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM items
+            WHERE gold_total > 0
+            ORDER BY gold_total DESC
+            LIMIT 100
+        """)
+        items = cursor.fetchall()
+        conn.close()
+
+        return render_template('items.html', items=items)
+    except Exception as e:
+        return render_template('error.html', error=str(e))
+
+@app.route('/match_analysis')
+def match_analysis():
+    """比赛数据分析页面"""
+    stats = get_match_statistics()
+    return render_template('match_analysis.html',
+                         stats=stats,
+                         has_data=stats is not None)
+
+@app.route('/match_results')
+def match_results():
+    """分析结果页面"""
+    analysis = get_match_statistics()
+    if not analysis:
+        return render_template('no_data.html')
+
+    return render_template('match_results.html', analysis=analysis)
+
+@app.route('/upload')
+def upload_page():
+    """文件上传页面"""
+    return render_template('upload.html')
+
+# ========== API接口 ==========
+@app.route('/api/import/items', methods=['POST'])
+def api_import_items():
+    """导入装备数据"""
+    try:
+        # 检查文件是否存在
+        if not os.path.exists('ItemTbl.csv'):
+            return jsonify({'success': False, 'error': 'ItemTbl.csv 文件不存在'})
+
+        result1 = import_items_from_csv('ItemTbl.csv')
+
+        # 如果有详细属性文件，也导入
+        if os.path.exists('LOL_items_stats.csv'):
+            result2 = import_item_stats('LOL_items_stats.csv')
+        else:
+            result2 = {'success': True, 'updated': 0, 'message': '跳过详细属性导入'}
+
+        return jsonify({
+            'success': result1['success'] and result2['success'],
+            'basic_items': result1,
+            'detailed_stats': result2,
+            'total_affected': result1.get('imported', 0) + result2.get('updated', 0)
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/match/upload', methods=['POST'])
+def api_match_upload():
+    """上传比赛数据"""
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'error': '没有选择文件'})
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': '没有选择文件'})
+
+    if not file.filename.endswith('.csv'):
+        return jsonify({'success': False, 'error': '只支持CSV格式文件'})
+
+    try:
+        # 读取文件内容
+        file_content = file.read().decode('utf-8')
+        result = process_match_file(file_content, file.filename)
+
+        return jsonify(result)
+
+    except UnicodeDecodeError:
+        try:
+            # 尝试其他编码
+            file.seek(0)
+            file_content = file.read().decode('gbk')
+            result = process_match_file(file_content, file.filename)
+            return jsonify(result)
+        except:
+            return jsonify({'success': False, 'error': '文件编码不支持，请使用UTF-8编码'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/match/stats')
+def api_match_stats():
+    """获取比赛统计"""
+    stats = get_match_statistics()
+    if stats:
+        return jsonify({'success': True, 'data': stats})
+    return jsonify({'success': False, 'error': '没有比赛数据'})
+
+@app.route('/api/match/export')
+def api_match_export():
+    """导出比赛数据"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT match_id, patch, queue_type, rank_fk,
+                   game_duration, game_duration_minutes, rank_category,
+                   uploaded_at
+            FROM matches
+            ORDER BY uploaded_at DESC
+        """)
+        data = cursor.fetchall()
+        conn.close()
+
+        if not data:
+            return jsonify({'success': False, 'error': '没有数据可导出'}), 404
+
+        # 创建CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        writer.writerow(['MatchId', 'Patch', 'QueueType', 'RankFk',
+                         'GameDuration(秒)', 'GameDuration(分钟)',
+                         'RankCategory', 'UploadedAt'])
+
+        for row in data:
+            writer.writerow(row)
+
+        output.seek(0)
+        response = app.response_class(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={
+                'Content-Disposition': f'attachment; filename=match_data_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+            }
+        )
+
+        return response
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/match/clear', methods=['POST'])
+def api_clear_matches():
+    """清除所有比赛数据"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT COUNT(*) FROM matches")
+        count = cursor.fetchone()[0]
+
+        cursor.execute("DELETE FROM matches")
+        cursor.execute("DELETE FROM analysis_cache")
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'cleared': count,
+            'message': f'已清除 {count} 条比赛记录'
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/items/list')
+def api_items_list():
+    """获取装备列表"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        # 获取查询参数
+        limit = request.args.get('limit', default=50, type=int)
+        offset = request.args.get('offset', default=0, type=int)
+        sort_by = request.args.get('sort_by', default='gold_total')
+        order = request.args.get('order', default='DESC')
+
+        valid_sort_fields = ['name', 'gold_total', 'ad', 'ap', 'health', 'armor', 'mr']
+        if sort_by not in valid_sort_fields:
+            sort_by = 'gold_total'
+
+        order = 'DESC' if order.upper() == 'DESC' else 'ASC'
+
+        cursor.execute(f"""
+            SELECT * FROM items
+            ORDER BY {sort_by} {order}
+            LIMIT ? OFFSET ?
+        """, (limit, offset))
+
+        items = [dict(row) for row in cursor.fetchall()]
+
+        cursor.execute("SELECT COUNT(*) FROM items")
+        total = cursor.fetchone()[0]
+
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'count': len(items),
+            'total': total,
+            'items': items,
+            'pagination': {
+                'limit': limit,
+                'offset': offset,
+                'has_more': offset + len(items) < total
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+# ========== 辅助路由 ==========
+@app.route('/health')
+def health_check():
+    """健康检查"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'database': os.path.exists(DB_PATH),
+        'items_count': get_item_count(),
+        'matches_count': get_match_count()
+    })
+
+def get_item_count():
+    """获取装备数量"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM items")
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count
+    except:
+        return 0
+
+def get_match_count():
+    """获取比赛数量"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM matches")
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count
+    except:
+        return 0
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
+
+# ========== 错误处理 ==========
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(e):
+    return render_template('500.html'), 500
+
+# ========== 启动应用 ==========
+if __name__ == '__main__':
+    # 初始化数据库
+    init_database()
+
+    print("=" * 60)
+    print("🚀 英雄联盟装备与数据分析网站 - mouxu")
+    print("=" * 60)
+    print(f"📁 项目目录: {BASE_DIR}")
+    print(f"🗄️  数据库路径: {DB_PATH}")
+    print(f"👤 用户名: mouxu")
+    print(f"🌐 访问地址: http://localhost:5000")
+    print("=" * 60)
+    print("📊 功能模块:")
+    print("   1. 装备数据查询与导入")
+    print("   2. 比赛数据分析与可视化")
+    print("   3. CSV文件上传与处理")
+    print("   4. 数据导出功能")
+    print("=" * 60)
+
+    app.run(host='0.0.0.0', port=5000, debug=True)
