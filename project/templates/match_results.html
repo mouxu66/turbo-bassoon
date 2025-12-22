@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}你的页面标题{% endblock %}
+
+{% block content %}
+<!-- 原有的HTML内容 -->
+{% endblock %}
+{% extends "layout.html" %}
+
+{% block title %}分析结果 - 比赛数据分析{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-chart-line me-2"></i>比赛数据分析报告
+        </h1>
+        <p class="lead mb-4">基于上传的比赛数据生成的详细分析</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- 统计概览 -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card-lol p-4">
+                <h3 class="mb-4" style="color: #ffd700;">
+                    <i class="fas fa-chart-bar me-2"></i>数据概览
+                </h3>
+
+                <div class="row text-center">
+                    <div class="col-md-2 col-6 mb-3">
+                        <div class="stat-number">{{ analysis.stats.total }}</div>
+                        <p>总比赛数</p>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <div class="stat-number">{{ analysis.stats.avg_duration }}</div>
+                        <p>平均时长(分钟)</p>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <div class="stat-number">{{ analysis.stats.min_duration }}</div>
+                        <p>最短时长</p>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <div class="stat-number">{{ analysis.stats.max_duration }}</div>
+                        <p>最长时长</p>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <div class="stat-number">{{ analysis.stats.unique_modes }}</div>
+                        <p>游戏模式</p>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <div class="stat-number">{{ analysis.stats.unique_patches }}</div>
+                        <p>游戏版本</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏模式分析 -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card-lol p-4">
+                <h3 class="mb-4" style="color: #ffd700;">
+                    <i class="fas fa-gamepad me-2"></i>游戏模式分布
+                </h3>
+
+                <div class="table-responsive">
+                    <table class="table table-lol">
+                        <thead>
+                            <tr>
+                                <th>游戏模式</th>
+                                <th>比赛数量</th>
+                                <th>占比</th>
+                                <th>平均时长(分钟)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mode, count in analysis.modes %}
+                            <tr>
+                                <td>{{ mode }}</td>
+                                <td>{{ count }}</td>
+                                <td>{{ "%.1f"|format(count / analysis.stats.total * 100) }}%</td>
+                                <td>计算中...</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 模式分布图表区域 -->
+                <div id="modeChart" class="mt-4" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 段位分布 -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card-lol p-4">
+                <h3 class="mb-4" style="color: #ffd700;">
+                    <i class="fas fa-trophy me-2"></i>段位分布
+                </h3>
+
+                <div class="table-responsive">
+                    <table class="table table-lol">
+                        <thead>
+                            <tr>
+                                <th>段位</th>
+                                <th>比赛数量</th>
+                                <th>占比</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rank, count in analysis.ranks %}
+                            <tr>
+                                <td>{{ rank }}</td>
+                                <td>{{ count }}</td>
+                                <td>{{ "%.1f"|format(count / analysis.stats.total * 100) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 段位分布图表区域 -->
+                <div id="rankChart" class="mt-4" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 版本趋势 -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card-lol p-4">
+                <h3 class="mb-4" style="color: #ffd700;">
+                    <i class="fas fa-code-branch me-2"></i>版本趋势
+                </h3>
+
+                <div class="table-responsive">
+                    <table class="table table-lol">
+                        <thead>
+                            <tr>
+                                <th>游戏版本</th>
+                                <th>比赛数量</th>
+                                <th>平均时长(分钟)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for version, count, avg_dur in analysis.versions %}
+                            <tr>
+                                <td>{{ version }}</td>
+                                <td>{{ count }}</td>
+                                <td>{{ "%.1f"|format(avg_dur) if avg_dur else "计算中" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 版本趋势图表区域 -->
+                <div id="versionChart" class="mt-4" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card-lol p-4 text-center">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <a href="/api/match/export" class="btn btn-lol w-100">
+                            <i class="fas fa-download me-2"></i>导出数据(CSV)
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="/match_analysis" class="btn btn-lol w-100">
+                            <i class="fas fa-upload me-2"></i>上传新数据
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-lol w-100" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>打印报告
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 生成游戏模式饼图
+        const modeLabels = {{ analysis.modes|map(attribute=0)|list|tojson }};
+        const modeValues = {{ analysis.modes|map(attribute=1)|list|tojson }};
+
+        if (modeLabels.length > 0) {
+            const modeData = [{
+                values: modeValues,
+                labels: modeLabels,
+                type: 'pie',
+                hole: .4,
+                marker: {
+                    colors: ['#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', '#118AB2', '#EF476F']
+                }
+            }];
+
+            const modeLayout = {
+                title: '游戏模式分布',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#c8aa6e' }
+            };
+
+            Plotly.newPlot('modeChart', modeData, modeLayout);
+        }
+
+        // 生成段位分布柱状图
+        const rankLabels = {{ analysis.ranks|map(attribute=0)|list|tojson }};
+        const rankValues = {{ analysis.ranks|map(attribute=1)|list|tojson }};
+
+        if (rankLabels.length > 0) {
+            const rankData = [{
+                x: rankLabels,
+                y: rankValues,
+                type: 'bar',
+                marker: {
+                    color: 'rgba(200, 170, 110, 0.7)',
+                    line: {
+                        color: 'rgb(200, 170, 110)',
+                        width: 1.5
+                    }
+                }
+            }];
+
+            const rankLayout = {
+                title: '段位分布',
+                xaxis: { title: '段位' },
+                yaxis: { title: '比赛数量' },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#c8aa6e' }
+            };
+
+            Plotly.newPlot('rankChart', rankData, rankLayout);
+        }
+
+        // 生成版本趋势图
+        const versionLabels = {{ analysis.versions|map(attribute=0)|list|tojson }};
+        const versionCounts = {{ analysis.versions|map(attribute=1)|list|tojson }};
+        const versionAvgDurations = {{ analysis.versions|map(attribute=2)|list|tojson }};
+
+        if (versionLabels.length > 0) {
+            const versionData = [
+                {
+                    x: versionLabels,
+                    y: versionCounts,
+                    type: 'bar',
+                    name: '比赛数量',
+                    marker: { color: '#3498db' }
+                },
+                {
+                    x: versionLabels,
+                    y: versionAvgDurations,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: '平均时长(分钟)',
+                    yaxis: 'y2',
+                    line: { color: '#e74c3c', width: 3 }
+                }
+            ];
+
+            const versionLayout = {
+                title: '版本趋势',
+                xaxis: { title: '游戏版本' },
+                yaxis: {
+                    title: '比赛数量',
+                    side: 'left',
+                    color: '#3498db'
+                },
+                yaxis2: {
+                    title: '平均时长(分钟)',
+                    side: 'right',
+                    overlaying: 'y',
+                    color: '#e74c3c'
+                },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#c8aa6e' },
+                showlegend: true,
+                legend: {
+                    x: 0.02,
+                    y: 1,
+                    bgcolor: 'rgba(0,0,0,0.5)'
+                }
+            };
+
+            Plotly.newPlot('versionChart', versionData, versionLayout);
+        }
+    });
+</script>
+{% endblock %}
