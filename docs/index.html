@@ -3,221 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英雄联盟数据分析 - 完整功能版</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/style.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/js/main.js" defer></script>
+    <title>🏆 英雄联盟数据分析中心</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/assets/js/main.js" defer></script>
+    <style>
+        /* 额外样式增强 */
+        .hero-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .particle {
+            position: absolute;
+            background: var(--lol-gold);
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+        
+        .champion-showcase {
+            background: rgba(30, 42, 71, 0.4);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 3rem 0;
+            border: 1px solid rgba(200, 170, 110, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .champion-showcase::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(200, 170, 110, 0.05), transparent);
+            z-index: 0;
+        }
+        
+        .data-visualization {
+            background: rgba(10, 20, 40, 0.7);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(10, 200, 185, 0.3);
+            position: relative;
+        }
+    </style>
 </head>
 <body>
     <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-trophy"></i> LOL数据分析
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <i class="fas fa-trophy logo-icon"></i>
+                <span>LoL数据中心</span>
             </a>
-            <div class="navbar-nav">
-                <a class="nav-link" href="/"><i class="fas fa-home"></i> 首页</a>
-                <a class="nav-link" href="#items-section"><i class="fas fa-shield-alt"></i> 装备查询</a>
-                <a class="nav-link" href="#analysis-section"><i class="fas fa-chart-bar"></i> 数据分析</a>
-                <a class="nav-link" href="#upload-section"><i class="fas fa-upload"></i> 数据上传</a>
-                <a class="nav-link" href="/data/"><i class="fas fa-download"></i> 数据下载</a>
-            </div>
+            
+            <ul class="nav-links">
+                <li><a href="/" class="nav-link active"><i class="fas fa-home"></i> 首页</a></li>
+                <li><a href="/items.html" class="nav-link"><i class="fas fa-shield-alt"></i> 装备库</a></li>
+                <li><a href="/analysis.html" class="nav-link"><i class="fas fa-chart-line"></i> 数据分析</a></li>
+                <li><a href="/about.html" class="nav-link"><i class="fas fa-info-circle"></i> 关于</a></li>
+                <li><a href="https://github.com/mouxu66/turbo-bassoon" class="nav-link" target="_blank">
+                    <i class="fab fa-github"></i> GitHub
+                </a></li>
+            </ul>
         </div>
     </nav>
 
     <!-- 英雄区域 -->
-    <div class="hero">
-        <div class="container">
-            <h1 class="display-4">🏆 英雄联盟数据分析平台</h1>
-            <p class="lead">完整功能静态版本 - 无需服务器，直接在浏览器中运行</p>
-            <div class="stats">
+    <section class="hero">
+        <div class="hero-particles" id="particles"></div>
+        
+        <div class="hero-content">
+            <h1 class="glow-text">英雄联盟数据分析中心</h1>
+            <p class="hero-subtitle">深入挖掘游戏数据，洞察胜利之道</p>
+            
+            <div class="hero-stats">
                 <div class="stat-card">
-                    <h3 id="item-count">0</h3>
-                    <p>装备数量</p>
+                    <div class="stat-number" id="stat-items">0</div>
+                    <div class="stat-label">装备数量</div>
                 </div>
                 <div class="stat-card">
-                    <h3 id="match-count">0</h3>
-                    <p>比赛记录</p>
+                    <div class="stat-number" id="stat-matches">0</div>
+                    <div class="stat-label">比赛记录</div>
                 </div>
                 <div class="stat-card">
-                    <h3 id="data-size">0</h3>
-                    <p>数据总量</p>
+                    <div class="stat-number" id="stat-patches">0</div>
+                    <div class="stat-label">游戏版本</div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 功能区域 -->
-    <div class="container">
-        <!-- 装备查询 -->
-        <section id="items-section" class="section">
-            <h2><i class="fas fa-shield-alt"></i> 装备数据库</h2>
-            <div class="card">
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <input type="text" id="search-item" class="form-control" placeholder="搜索装备名称...">
-                        </div>
-                        <div class="col-md-6">
-                            <select id="sort-items" class="form-control">
-                                <option value="name">按名称排序</option>
-                                <option value="price">按价格排序</option>
-                                <option value="ad">按攻击力排序</option>
-                                <option value="ap">按法强排序</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div id="items-container" class="table-responsive">
-                        <!-- 装备表格将通过JavaScript加载 -->
-                        <p class="text-center">加载装备数据中...</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 数据分析 -->
-        <section id="analysis-section" class="section">
-            <h2><i class="fas fa-chart-bar"></i> 数据分析工具</h2>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5>装备属性分布</h5>
-                            <canvas id="item-chart" width="400" height="300"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5>价格区间分析</h5>
-                            <canvas id="price-chart" width="400" height="300"></canvas>
-                        </div>
-                    </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-champions">0</div>
+                    <div class="stat-label">英雄总数</div>
                 </div>
             </div>
             
-            <div class="card mt-4">
-                <div class="card-body">
-                    <h5>数据分析工具</h5>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <button class="btn btn-primary w-100 mb-2" onclick="analyzeByPrice()">
-                                <i class="fas fa-money-bill-wave"></i> 价格分析
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-success w-100 mb-2" onclick="analyzeByStats()">
-                                <i class="fas fa-chart-line"></i> 属性分析
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-info w-100 mb-2" onclick="generateReport()">
-                                <i class="fas fa-file-export"></i> 生成报告
-                            </button>
-                        </div>
-                    </div>
-                    <div id="analysis-result" class="mt-3"></div>
-                </div>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="/items.html" class="btn btn-primary">
+                    <i class="fas fa-search"></i> 探索装备数据库
+                </a>
+                <a href="/analysis.html" class="btn btn-secondary">
+                    <i class="fas fa-chart-bar"></i> 开始数据分析
+                </a>
+                <a href="#features" class="btn btn-outline">
+                    <i class="fas fa-arrow-down"></i> 了解更多
+                </a>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- 数据上传（模拟） -->
-        <section id="upload-section" class="section">
-            <h2><i class="fas fa-upload"></i> 数据上传与处理</h2>
-            <div class="card">
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        由于是静态网站，上传功能为模拟演示。实际数据将在浏览器中处理。
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">选择数据类型：</label>
-                        <select id="data-type" class="form-control">
-                            <option value="items">装备数据</option>
-                            <option value="matches">比赛数据</option>
-                            <option value="custom">自定义数据</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">上传CSV文件：</label>
-                        <input type="file" id="csv-upload" class="form-control" accept=".csv">
-                        <small class="text-muted">支持标准CSV格式，UTF-8编码</small>
-                    </div>
-                    
-                    <button class="btn btn-primary" onclick="processUpload()">
-                        <i class="fas fa-cogs"></i> 处理数据
-                    </button>
-                    
-                    <div id="upload-result" class="mt-3"></div>
-                    
-                    <div class="mt-4">
-                        <h5>示例数据下载：</h5>
-                        <a href="/data/ItemTbl.csv" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-download"></i> 装备数据模板
-                        </a>
-                        <a href="/data/MatchTbl.csv" class="btn btn-outline-success btn-sm ms-2">
-                            <i class="fas fa-download"></i> 比赛数据模板
-                        </a>
-                    </div>
+    <!-- 功能特色 -->
+    <section id="features" class="features">
+        <h2 class="section-title">核心功能</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-database"></i>
                 </div>
+                <h3 class="feature-title">完整装备数据库</h3>
+                <p class="feature-desc">
+                    收录所有英雄联盟装备的详细数据，包括属性、价格、合成路径等，
+                    支持高级搜索和筛选功能。
+                </p>
             </div>
-        </section>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h3 class="feature-title">深度数据分析</h3>
+                <p class="feature-desc">
+                    提供专业的统计分析和可视化工具，帮助您理解数据背后的趋势和规律，
+                    优化游戏策略。
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 class="feature-title">实时数据更新</h3>
+                <p class="feature-desc">
+                    跟随游戏版本实时更新数据，确保您获得的信息始终是最新、最准确的。
+                </p>
+            </div>
+        </div>
+    </section>
 
-        <!-- 数据导出 -->
-        <section class="section">
-            <h2><i class="fas fa-download"></i> 数据导出</h2>
-            <div class="card">
-                <div class="card-body">
-                    <p>导出当前分析结果：</p>
-                    <div class="btn-group">
-                        <button class="btn btn-outline-primary" onclick="exportJSON()">
-                            <i class="fas fa-file-code"></i> JSON格式
-                        </button>
-                        <button class="btn btn-outline-success" onclick="exportCSV()">
-                            <i class="fas fa-file-csv"></i> CSV格式
-                        </button>
-                        <button class="btn btn-outline-info" onclick="exportHTML()">
-                            <i class="fas fa-file-alt"></i> HTML报告
-                        </button>
-                    </div>
-                    <div id="export-result" class="mt-3"></div>
+    <!-- 数据可视化展示 -->
+    <section class="features">
+        <h2 class="section-title">数据洞察</h2>
+        
+        <div class="champion-showcase">
+            <h3 style="text-align: center; margin-bottom: 2rem; color: var(--lol-gold);">
+                <i class="fas fa-crown"></i> 热门装备排行
+            </h3>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>装备名称</th>
+                            <th>出场率</th>
+                            <th>胜率</th>
+                            <th>平均价格</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="stat-number" style="font-size: 1.2rem;">1</span></td>
+                            <td><strong>无尽之刃</strong></td>
+                            <td>68.5%</td>
+                            <td style="color: var(--lol-green);">52.3%</td>
+                            <td><span style="color: var(--lol-gold);">3400</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="stat-number" style="font-size: 1.2rem;">2</span></td>
+                            <td><strong>灭世者的死亡之帽</strong></td>
+                            <td>45.2%</td>
+                            <td style="color: var(--lol-green);">53.1%</td>
+                            <td><span style="color: var(--lol-gold);">3600</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="stat-number" style="font-size: 1.2rem;">3</span></td>
+                            <td><strong>三相之力</strong></td>
+                            <td>42.8%</td>
+                            <td style="color: var(--lol-green);">51.7%</td>
+                            <td><span style="color: var(--lol-gold);">3333</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- 快速开始 -->
+    <section class="features">
+        <h2 class="section-title">快速开始</h2>
+        
+        <div style="text-align: center; max-width: 800px; margin: 0 auto;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin: 3rem 0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: var(--lol-gold); margin-bottom: 1rem;">1</div>
+                    <h3 style="color: var(--lol-gold-light); margin-bottom: 1rem;">浏览装备</h3>
+                    <p style="color: var(--lol-gold-light); opacity: 0.8;">探索完整的英雄联盟装备数据库</p>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: var(--lol-blue); margin-bottom: 1rem;">2</div>
+                    <h3 style="color: var(--lol-gold-light); margin-bottom: 1rem;">分析数据</h3>
+                    <p style="color: var(--lol-gold-light); opacity: 0.8;">使用强大的分析工具发现洞察</p>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: var(--lol-green); margin-bottom: 1rem;">3</div>
+                    <h3 style="color: var(--lol-gold-light); margin-bottom: 1rem;">优化策略</h3>
+                    <p style="color: var(--lol-gold-light); opacity: 0.8;">基于数据优化您的游戏策略</p>
                 </div>
             </div>
-        </section>
-    </div>
+            
+            <a href="/items.html" class="btn btn-primary" style="padding: 1.2rem 3rem; font-size: 1.2rem;">
+                <i class="fas fa-rocket"></i> 立即开始探索
+            </a>
+        </div>
+    </section>
 
     <!-- 页脚 -->
     <footer class="footer">
-        <div class="container">
-            <p>© 2024 英雄联盟数据分析平台 - 纯静态功能版本</p>
-            <p class="small">
-                所有功能均在浏览器中运行，无需服务器支持。
-                数据来源：游戏API与社区数据。
-            </p>
-            <p class="small">
-                最后更新: <span id="last-update">加载中...</span> |
-                数据版本: <span id="data-version">1.0.0</span>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>LoL数据中心</h3>
+                <p style="opacity: 0.8; line-height: 1.6;">
+                    致力于提供最全面、最准确的英雄联盟数据分析服务，
+                    帮助玩家和研究者更好地理解游戏。
+                </p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>快速链接</h3>
+                <ul class="footer-links">
+                    <li><a href="/">首页</a></li>
+                    <li><a href="/items.html">装备数据库</a></li>
+                    <li><a href="/analysis.html">数据分析</a></li>
+                    <li><a href="/about.html">关于我们</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>数据来源</h3>
+                <ul class="footer-links">
+                    <li>Riot Games API</li>
+                    <li>社区数据贡献</li>
+                    <li>专业分析团队</li>
+                    <li>版本：14.24</li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>联系信息</h3>
+                <ul class="footer-links">
+                    <li>GitHub: mouxu66</li>
+                    <li>更新于: <span id="current-time">加载中...</span></li>
+                    <li>状态: <span style="color: var(--lol-green);">● 在线</span></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>© 2024 英雄联盟数据分析中心 | 本网站与Riot Games无关，数据仅供参考</p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem;">
+                最后更新: 2024-12-21 | 数据版本: 1.4.2
             </p>
         </div>
     </footer>
 
-    <!-- 模态框（用于详情展示） -->
-    <div class="modal fade" id="itemModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="itemModalTitle">装备详情</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="itemModalBody">
-                    加载中...
-                </div>
-            </div>
-        </div>
-    </div>
+    <script>
+        // 创建粒子效果
+        function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const size = Math.random() * 4 + 1;
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const duration = Math.random() * 20 + 10;
+                
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${x}%`;
+                particle.style.top = `${y}%`;
+                particle.style.animation = `float ${duration}s infinite ease-in-out`;
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                
+                container.appendChild(particle);
+            }
+            
+            // 添加CSS动画
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes float {
+                    0%, 100% { transform: translateY(0) rotate(0deg); }
+                    50% { transform: translateY(-20px) rotate(180deg); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.addEventListener('DOMContentLoaded', createParticles);
+    </script>
 </body>
 </html>

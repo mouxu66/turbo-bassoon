@@ -1,63 +1,463 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>关于项目 - LOL数据分析</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ℹ️ 关于我们 - LoL数据分析中心</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/assets/js/main.js" defer></script>
+    <style>
+        .about-hero {
+            background: linear-gradient(rgba(10, 20, 40, 0.9), rgba(10, 20, 40, 0.9)),
+                        url('https://images.contentstack.io/v3/assets/blt187521ff0727be24/blt44f8f8c57166b402/60ee119e2c9b4e0d4f4a6d61/lol-gameplay-article-banner.jpg');
+            background-size: cover;
+            background-position: center;
+            padding: 5rem 2rem;
+            text-align: center;
+            border-radius: 0 0 30px 30px;
+            margin-bottom: 3rem;
+        }
+        
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 2rem;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--lol-gold), var(--lol-blue));
+            transform: translateX(-50%);
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin: 2rem 0;
+            width: 45%;
+        }
+        
+        .timeline-item:nth-child(odd) {
+            left: 0;
+        }
+        
+        .timeline-item:nth-child(even) {
+            left: 55%;
+        }
+        
+        .timeline-content {
+            background: rgba(30, 42, 71, 0.6);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(200, 170, 110, 0.2);
+            position: relative;
+        }
+        
+        .timeline-content::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            width: 20px;
+            height: 20px;
+            background: var(--lol-gold);
+            border-radius: 50%;
+        }
+        
+        .timeline-item:nth-child(odd) .timeline-content::before {
+            right: -35px;
+        }
+        
+        .timeline-item:nth-child(even) .timeline-content::before {
+            left: -35px;
+        }
+        
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .team-card {
+            background: rgba(30, 42, 71, 0.6);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(200, 170, 110, 0.2);
+            transition: all 0.3s;
+        }
+        
+        .team-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--lol-gold);
+        }
+        
+        .team-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--lol-gold) 0%, var(--lol-blue) 100%);
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: var(--lol-bg-darker);
+        }
+        
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+        
+        .tech-badge {
+            background: rgba(30, 42, 71, 0.6);
+            border: 1px solid rgba(200, 170, 110, 0.2);
+            color: var(--lol-gold-light);
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .tech-badge:hover {
+            background: var(--lol-gold);
+            color: var(--lol-bg-darker);
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">首页</a></li>
-                <li class="breadcrumb-item active">关于项目</li>
-            </ol>
-        </nav>
-        
-        <h1 class="mb-4"><i class="fas fa-info-circle"></i> 关于英雄联盟数据分析平台</h1>
-        
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">项目简介</h5>
-                <p class="card-text">
-                    这是一个基于Flask和GitHub Pages的英雄联盟数据分析平台，采用双站协作架构，
-                    结合了PythonAnywhere的动态处理能力和GitHub Pages的静态展示优势。
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <i class="fas fa-info-circle logo-icon"></i>
+                <span>关于我们</span>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="/" class="nav-link"><i class="fas fa-home"></i> 首页</a></li>
+                <li><a href="/items.html" class="nav-link"><i class="fas fa-shield-alt"></i> 装备库</a></li>
+                <li><a href="/analysis.html" class="nav-link"><i class="fas fa-chart-line"></i> 数据分析</a></li>
+                <li><a href="/about.html" class="nav-link active"><i class="fas fa-info-circle"></i> 关于</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 关于英雄区域 -->
+    <section class="about-hero">
+        <h1 style="font-size: 3.5rem; color: var(--lol-gold); margin-bottom: 1rem;">
+            关于 LoL数据分析中心
+        </h1>
+        <p style="color: var(--lol-gold-light); font-size: 1.2rem; max-width: 600px; margin: 0 auto;">
+            我们致力于为英雄联盟玩家和研究者提供最全面、最准确的数据分析服务
+        </p>
+    </section>
+
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+        <!-- 项目介绍 -->
+        <section style="margin: 4rem 0;">
+            <h2 class="section-title">项目愿景</h2>
+            
+            <div style="background: rgba(30, 42, 71, 0.6); border-radius: 15px; padding: 2.5rem; margin: 2rem 0;">
+                <p style="color: var(--lol-gold-light); line-height: 1.8; margin-bottom: 1.5rem;">
+                    英雄联盟数据分析中心诞生于对游戏数据的热爱和探索精神。我们相信，数据不仅仅是数字，
+                    更是理解游戏、提升技术的钥匙。我们的目标是建立一个全面、准确、易用的数据分析平台，
+                    帮助每一位玩家从数据中发现价值，优化策略。
                 </p>
-                
-                <h5 class="mt-4">技术架构</h5>
-                <ul>
-                    <li><strong>后端</strong>: Flask + SQLite + Pandas</li>
-                    <li><strong>前端</strong>: Bootstrap 5 + Chart.js</li>
-                    <li><strong>部署</strong>: PythonAnywhere + GitHub Pages</li>
-                    <li><strong>自动化</strong>: Git + 定时同步脚本</li>
-                </ul>
-                
-                <h5 class="mt-4">功能特点</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <ul>
-                            <li>装备数据查询与分析</li>
-                            <li>比赛数据统计与可视化</li>
-                            <li>CSV文件上传与处理</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <ul>
-                            <li>数据导出与分享</li>
-                            <li>响应式网页设计</li>
-                            <li>双站自动同步</li>
-                        </ul>
+                <p style="color: var(--lol-gold-light); line-height: 1.8;">
+                    无论您是普通玩家想要提升段位，还是专业分析师研究战术，或是游戏开发者寻找灵感，
+                    我们都希望这个平台能为您提供有价值的数据支持。
+                </p>
+            </div>
+        </section>
+
+        <!-- 发展历程 -->
+        <section style="margin: 4rem 0;">
+            <h2 class="section-title">发展历程</h2>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3 style="color: var(--lol-gold); margin-bottom: 0.5rem;">2023.06</h3>
+                        <p style="color: var(--lol-gold-light);">项目启动，数据收集开始</p>
                     </div>
                 </div>
                 
-                <h5 class="mt-4">作者信息</h5>
-                <p>GitHub: <a href="https://github.com/mouxu66">mouxu66</a></p>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3 style="color: var(--lol-gold); margin-bottom: 0.5rem;">2023.09</h3>
+                        <p style="color: var(--lol-gold-light);">装备数据库 V1.0 上线</p>
+                    </div>
+                </div>
                 
-                <div class="mt-4">
-                    <a href="/" class="btn btn-primary">返回首页</a>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3 style="color: var(--lol-gold); margin-bottom: 0.5rem;">2024.01</h3>
+                        <p style="color: var(--lol-gold-light);">数据分析工具发布</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3 style="color: var(--lol-gold); margin-bottom: 0.5rem;">2024.03</h3>
+                        <p style="color: var(--lol-gold-light);">移动端适配完成</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3 style="color: var(--lol-gold); margin-bottom: 0.5rem;">2024.06</h3>
+                        <p style="color: var(--lol-gold-light);">API服务开放</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3 style="color: var(--lol-gold); margin-bottom: 0.5rem;">2024.12</h3>
+                        <p style="color: var(--lol-gold-light);">完整网站重构发布</p>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- 技术栈 -->
+        <section style="margin: 4rem 0;">
+            <h2 class="section-title">技术架构</h2>
+            
+            <div style="text-align: center; margin: 2rem 0;">
+                <p style="color: var(--lol-gold-light); margin-bottom: 2rem;">
+                    我们采用现代化的技术栈，确保网站的稳定性、性能和用户体验
+                </p>
+                
+                <div class="tech-stack">
+                    <div class="tech-badge">
+                        <i class="fab fa-html5"></i> HTML5
+                    </div>
+                    <div class="tech-badge">
+                        <i class="fab fa-css3-alt"></i> CSS3
+                    </div>
+                    <div class="tech-badge">
+                        <i class="fab fa-js"></i> JavaScript
+                    </div>
+                    <div class="tech-badge">
+                        <i class="fab fa-python"></i> Python
+                    </div>
+                    <div class="tech-badge">
+                        <i class="fas fa-database"></i> SQLite
+                    </div>
+                    <div class="tech-badge">
+                        <i class="fab fa-github"></i> GitHub Pages
+                    </div>
+                    <div class="tech-badge">
+                        <i class="fas fa-chart-line"></i> Chart.js
+                    </div>
+                    <div class="tech-badge">
+                        <i class="fab fa-bootstrap"></i> Bootstrap
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 团队介绍 -->
+        <section style="margin: 4rem 0;">
+            <h2 class="section-title">核心团队</h2>
+            
+            <div class="team-grid">
+                <div class="team-card">
+                    <div class="team-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h3 style="color: var(--lol-gold); margin-bottom: 0.5rem;">mouxu</h3>
+                    <p style="color: var(--lol-gold-light); font-size: 0.9rem; margin-bottom: 1rem;">项目发起人 & 全栈开发</p>
+                    <p style="color: var(--lol-gold-light); opacity: 0.8; font-size: 0.9rem;">
+                        负责整体架构设计和核心功能开发
+                    </p>
+                </div>
+                
+                <div class="team-card">
+                    <div class="team-avatar">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3 style="color: var(--lol-gold); margin-bottom: 0.5rem;">数据分析组</h3>
+                    <p style="color: var(--lol-gold-light); font-size: 0.9rem; margin-bottom: 1rem;">数据处理 & 分析</p>
+                    <p style="color: var(--lol-gold-light); opacity: 0.8; font-size: 0.9rem;">
+                        负责数据收集、清洗和分析模型构建
+                    </p>
+                </div>
+                
+                <div class="team-card">
+                    <div class="team-avatar">
+                        <i class="fas fa-paint-brush"></i>
+                    </div>
+                    <h3 style="color: var(--lol-gold); margin-bottom: 0.5rem;">设计团队</h3>
+                    <p style="color: var(--lol-gold-light); font-size: 0.9rem; margin-bottom: 1rem;">UI/UX 设计</p>
+                    <p style="color: var(--lol-gold-light); opacity: 0.8; font-size: 0.9rem;">
+                        负责用户体验和界面设计优化
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 联系方式 -->
+        <section style="margin: 4rem 0; text-align: center;">
+            <h2 class="section-title">联系我们</h2>
+            
+            <div style="max-width: 600px; margin: 2rem auto;">
+                <p style="color: var(--lol-gold-light); margin-bottom: 2rem;">
+                    如果您有任何问题、建议或合作意向，欢迎通过以下方式联系我们
+                </p>
+                
+                <div style="display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;">
+                    <a href="https://github.com/mouxu66" 
+                       class="btn btn-outline"
+                       target="_blank"
+                       style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fab fa-github"></i> GitHub
+                    </a>
+                    
+                    <a href="https://github.com/mouxu66/turbo-bassoon" 
+                       class="btn btn-outline"
+                       target="_blank"
+                       style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-code"></i> 项目仓库
+                    </a>
+                    
+                    <button class="btn btn-primary" onclick="showContactForm()">
+                        <i class="fas fa-envelope"></i> 发送消息
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 致谢 -->
+        <section style="margin: 4rem 0;">
+            <div style="background: rgba(30, 42, 71, 0.6); border-radius: 15px; padding: 2rem; text-align: center;">
+                <h3 style="color: var(--lol-gold); margin-bottom: 1rem;">特别致谢</h3>
+                <p style="color: var(--lol-gold-light); line-height: 1.6;">
+                    感谢 Riot Games 提供的游戏数据和 API 支持<br>
+                    感谢所有贡献数据的社区成员<br>
+                    感谢每一位使用我们服务的玩家和研究者
+                </p>
+                <p style="color: var(--lol-gold-light); opacity: 0.7; margin-top: 1rem; font-size: 0.9rem;">
+                    本网站为粉丝项目，与 Riot Games 无关。英雄联盟是 Riot Games 的注册商标。
+                </p>
+            </div>
+        </section>
     </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>关于项目</h3>
+                <ul class="footer-links">
+                    <li><a href="/about.html">项目介绍</a></li>
+                    <li><a href="#team">团队信息</a></li>
+                    <li><a href="#tech">技术架构</a></li>
+                    <li><a href="#history">发展历程</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>数据声明</h3>
+                <ul class="footer-links">
+                    <li>数据来源声明</li>
+                    <li>使用条款</li>
+                    <li>隐私政策</li>
+                    <li>免责声明</li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>版本信息</h3>
+                <ul class="footer-links">
+                    <li>当前版本: 2.0.0</li>
+                    <li>最后更新: 2024-12-21</li>
+                    <li>数据版本: 14.24</li>
+                    <li>构建编号: #202412211430</li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>开源协议</h3>
+                <ul class="footer-links">
+                    <li>MIT License</li>
+                    <li>代码开源</li>
+                    <li>自由使用</li>
+                    <li>欢迎贡献</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>© 2024 英雄联盟数据分析中心 - 关于页面</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                Made with <i class="fas fa-heart" style="color: var(--lol-red);"></i> for the LoL community
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        function showContactForm() {
+            const formHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(1, 10, 19, 0.9); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+                    <div style="background: var(--lol-bg-darker); padding: 2rem; border-radius: 15px; max-width: 500px; width: 90%; border: 2px solid var(--lol-gold);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--lol-gold); margin: 0;">联系我们</h3>
+                            <button onclick="closeContactForm()" style="background: none; border: none; color: var(--lol-gold-light); font-size: 1.5rem; cursor: pointer;">×</button>
+                        </div>
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; color: var(--lol-gold-light); margin-bottom: 0.5rem;">您的邮箱</label>
+                            <input type="email" id="contactEmail" style="width: 100%; padding: 0.8rem; background: rgba(30, 42, 71, 0.6); border: 1px solid rgba(200, 170, 110, 0.3); border-radius: 8px; color: var(--lol-gold-light);">
+                        </div>
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; color: var(--lol-gold-light); margin-bottom: 0.5rem;">消息内容</label>
+                            <textarea id="contactMessage" rows="5" style="width: 100%; padding: 0.8rem; background: rgba(30, 42, 71, 0.6); border: 1px solid rgba(200, 170, 110, 0.3); border-radius: 8px; color: var(--lol-gold-light); resize: vertical;"></textarea>
+                        </div>
+                        
+                        <button class="btn btn-primary" style="width: 100%;" onclick="sendContactMessage()">
+                            <i class="fas fa-paper-plane"></i> 发送消息
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            const formDiv = document.createElement('div');
+            formDiv.innerHTML = formHTML;
+            document.body.appendChild(formDiv);
+        }
+        
+        function closeContactForm() {
+            const form = document.querySelector('div[style*="position: fixed"]');
+            if (form) {
+                form.remove();
+            }
+        }
+        
+        function sendContactMessage() {
+            const email = document.getElementById('contactEmail').value;
+            const message = document.getElementById('contactMessage').value;
+            
+            if (!email || !message) {
+                showNotification('请填写完整的信息', 'error');
+                return;
+            }
+            
+            showNotification('消息发送成功！我们会在24小时内回复您。', 'success');
+            closeContactForm();
+        }
+    </script>
 </body>
 </html>

@@ -1,99 +1,609 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>装备查询 - LOL数据分析</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/css/style.css" rel="stylesheet">
-    <script src="/js/items.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏹 装备数据库 - LoL数据分析中心</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/assets/js/main.js" defer></script>
+    <style>
+        .search-bar {
+            background: rgba(30, 42, 71, 0.6);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(200, 170, 110, 0.2);
+        }
+        
+        .filter-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .filter-label {
+            color: var(--lol-gold);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .filter-input {
+            background: rgba(10, 20, 40, 0.7);
+            border: 1px solid rgba(200, 170, 110, 0.3);
+            border-radius: 8px;
+            padding: 0.8rem;
+            color: var(--lol-gold-light);
+            transition: all 0.3s;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--lol-gold);
+            box-shadow: 0 0 0 2px rgba(200, 170, 110, 0.1);
+        }
+        
+        .item-card {
+            background: rgba(30, 42, 71, 0.6);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(200, 170, 110, 0.2);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .item-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--lol-gold);
+            box-shadow: 0 10px 30px rgba(200, 170, 110, 0.15);
+        }
+        
+        .item-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, var(--lol-gold), var(--lol-blue));
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .item-name {
+            color: var(--lol-gold);
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .item-price {
+            background: linear-gradient(135deg, var(--lol-gold) 0%, var(--lol-gold-dark) 100%);
+            color: var(--lol-bg-darker);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .item-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+            margin: 1rem 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 0.5rem;
+            background: rgba(10, 20, 40, 0.4);
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            color: var(--lol-gold);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .stat-label {
+            color: var(--lol-gold-light);
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 2rem 0;
+        }
+        
+        .page-btn {
+            background: rgba(30, 42, 71, 0.6);
+            border: 1px solid rgba(200, 170, 110, 0.2);
+            color: var(--lol-gold-light);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .page-btn:hover,
+        .page-btn.active {
+            background: var(--lol-gold);
+            color: var(--lol-bg-darker);
+            border-color: var(--lol-gold);
+        }
+        
+        .category-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .category-tab {
+            background: rgba(30, 42, 71, 0.6);
+            border: 1px solid rgba(200, 170, 110, 0.2);
+            color: var(--lol-gold-light);
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .category-tab:hover,
+        .category-tab.active {
+            background: var(--lol-gold);
+            color: var(--lol-bg-darker);
+            border-color: var(--lol-gold);
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-arrow-left"></i> 返回首页
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <i class="fas fa-shield-alt logo-icon"></i>
+                <span>装备数据库</span>
             </a>
+            
+            <ul class="nav-links">
+                <li><a href="/" class="nav-link"><i class="fas fa-home"></i> 首页</a></li>
+                <li><a href="/items.html" class="nav-link active"><i class="fas fa-shield-alt"></i> 装备库</a></li>
+                <li><a href="/analysis.html" class="nav-link"><i class="fas fa-chart-line"></i> 数据分析</a></li>
+                <li><a href="/about.html" class="nav-link"><i class="fas fa-info-circle"></i> 关于</a></li>
+            </ul>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <h1><i class="fas fa-shield-alt"></i> 装备详细数据库</h1>
-        
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5>高级搜索</h5>
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label>价格范围</label>
-                        <input type="number" id="min-price" class="form-control" placeholder="最低价">
-                    </div>
-                    <div class="col-md-3">
-                        <input type="number" id="max-price" class="form-control mt-4" placeholder="最高价">
-                    </div>
-                    <div class="col-md-3">
-                        <label>攻击力 ≥</label>
-                        <input type="number" id="min-ad" class="form-control" value="0">
-                    </div>
-                    <div class="col-md-3">
-                        <label>法强 ≥</label>
-                        <input type="number" id="min-ap" class="form-control" value="0">
-                    </div>
-                </div>
-                <button class="btn btn-primary mt-3" onclick="searchItems()">
-                    <i class="fas fa-search"></i> 搜索装备
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+        <!-- 页面标题 -->
+        <div style="text-align: center; margin: 3rem 0;">
+            <h1 style="font-size: 3rem; color: var(--lol-gold); margin-bottom: 1rem;">
+                <i class="fas fa-treasure-chest"></i> 英雄联盟装备数据库
+            </h1>
+            <p style="color: var(--lol-gold-light); opacity: 0.9; font-size: 1.1rem;">
+                探索所有装备的详细属性和数据，优化您的出装策略
+            </p>
+        </div>
+
+        <!-- 搜索和筛选 -->
+        <div class="search-bar">
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <input type="text" 
+                       id="searchInput" 
+                       class="filter-input" 
+                       placeholder="搜索装备名称..." 
+                       style="flex: 1;">
+                <button class="btn btn-primary" onclick="searchItems()">
+                    <i class="fas fa-search"></i> 搜索
                 </button>
-                <button class="btn btn-outline-secondary mt-3 ms-2" onclick="resetSearch()">
+                <button class="btn btn-outline" onclick="resetFilters()">
                     <i class="fas fa-redo"></i> 重置
                 </button>
             </div>
-        </div>
-
-        <div id="items-table-container">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>名称</th>
-                        <th>价格</th>
-                        <th>攻击力</th>
-                        <th>法强</th>
-                        <th>生命值</th>
-                        <th>护甲</th>
-                        <th>魔抗</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="items-table-body">
-                    <!-- 通过JavaScript填充 -->
-                </tbody>
-            </table>
-        </div>
-
-        <div class="mt-4">
-            <div class="btn-group">
-                <button class="btn btn-outline-primary" onclick="prevPage()">
-                    <i class="fas fa-chevron-left"></i> 上一页
-                </button>
-                <span class="btn btn-light" id="page-info">第1页</span>
-                <button class="btn btn-outline-primary" onclick="nextPage()">
-                    下一页 <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-            <button class="btn btn-success ms-3" onclick="exportFilteredItems()">
-                <i class="fas fa-download"></i> 导出当前结果
-            </button>
-        </div>
-    </div>
-
-    <!-- 详情模态框 -->
-    <div class="modal fade" id="detailModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">装备详情</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            
+            <div class="filter-options">
+                <div class="filter-group">
+                    <label class="filter-label">价格范围</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="minPrice" class="filter-input" placeholder="最低" min="0" max="10000">
+                        <input type="number" id="maxPrice" class="filter-input" placeholder="最高" min="0" max="10000">
+                    </div>
                 </div>
-                <div class="modal-body" id="detailContent"></div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">攻击力 ≥</label>
+                    <input type="number" id="minAD" class="filter-input" value="0" min="0" max="200">
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">法术强度 ≥</label>
+                    <input type="number" id="minAP" class="filter-input" value="0" min="0" max="200">
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">排序方式</label>
+                    <select id="sortBy" class="filter-input">
+                        <option value="name">按名称排序</option>
+                        <option value="price">按价格排序</option>
+                        <option value="ad">按攻击力排序</option>
+                        <option value="ap">按法强排序</option>
+                    </select>
+                </div>
             </div>
         </div>
+
+        <!-- 分类标签 -->
+        <div class="category-tabs">
+            <div class="category-tab active" onclick="filterByCategory('all')">全部装备</div>
+            <div class="category-tab" onclick="filterByCategory('attack')">攻击装备</div>
+            <div class="category-tab" onclick="filterByCategory('ap')">法术装备</div>
+            <div class="category-tab" onclick="filterByCategory('defense')">防御装备</div>
+            <div class="category-tab" onclick="filterByCategory('movement')">移动装备</div>
+            <div class="category-tab" onclick="filterByCategory('consumable')">消耗品</div>
+        </div>
+
+        <!-- 装备网格 -->
+        <div class="item-grid" id="itemsGrid">
+            <!-- 装备卡片将通过JavaScript动态生成 -->
+            <div class="item-card">
+                <div class="item-header">
+                    <div class="item-name">无尽之刃</div>
+                    <div class="item-price">3400</div>
+                </div>
+                <p style="color: var(--lol-gold-light); opacity: 0.8; font-size: 0.9rem; margin-bottom: 1rem;">
+                    提供大量攻击力和暴击伤害，是ADC的核心装备。
+                </p>
+                <div class="item-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">70</div>
+                        <div class="stat-label">攻击力</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">25%</div>
+                        <div class="stat-label">暴击率</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">法强</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="item-card">
+                <div class="item-header">
+                    <div class="item-name">灭世者的死亡之帽</div>
+                    <div class="item-price">3600</div>
+                </div>
+                <p style="color: var(--lol-gold-light); opacity: 0.8; font-size: 0.9rem; margin-bottom: 1rem;">
+                    大幅提升法术强度，是AP英雄的终极装备。
+                </p>
+                <div class="item-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">120</div>
+                        <div class="stat-label">法术强度</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">35%</div>
+                        <div class="stat-label">法强加成</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">攻击力</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="item-card">
+                <div class="item-header">
+                    <div class="item-name">兰顿之兆</div>
+                    <div class="item-price">2700</div>
+                </div>
+                <p style="color: var(--lol-gold-light); opacity: 0.8; font-size: 0.9rem; margin-bottom: 1rem;">
+                    提供大量护甲和生命值，针对物理伤害的防御装备。
+                </p>
+                <div class="item-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">400</div>
+                        <div class="stat-label">生命值</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">60</div>
+                        <div class="stat-label">护甲</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">法强</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 更多装备卡片... -->
+        </div>
+
+        <!-- 分页 -->
+        <div class="pagination">
+            <div class="page-btn" onclick="changePage(1)">1</div>
+            <div class="page-btn active" onclick="changePage(2)">2</div>
+            <div class="page-btn" onclick="changePage(3)">3</div>
+            <div class="page-btn" onclick="changePage(4)">4</div>
+            <div class="page-btn" onclick="changePage(5)">5</div>
+        </div>
+
+        <!-- 统计信息 -->
+        <div style="text-align: center; margin: 3rem 0; color: var(--lol-gold-light); opacity: 0.8;">
+            <p>共 <strong style="color: var(--lol-gold);">156</strong> 件装备 | 最后更新: 2024-12-21</p>
+            <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                数据来源: Riot Games API | 版本: 14.24
+            </p>
+        </div>
     </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>装备数据库</h3>
+                <p style="opacity: 0.8; line-height: 1.6;">
+                    提供最全面的英雄联盟装备数据，帮助您做出最佳出装决策。
+                </p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>数据分类</h3>
+                <ul class="footer-links">
+                    <li>攻击装备 (45件)</li>
+                    <li>法术装备 (38件)</li>
+                    <li>防御装备 (42件)</li>
+                    <li>功能装备 (31件)</li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>快速操作</h3>
+                <ul class="footer-links">
+                    <li><a href="javascript:void(0)" onclick="exportData('items')">导出数据</a></li>
+                    <li><a href="/analysis.html">数据分析</a></li>
+                    <li><a href="/">返回首页</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>技术信息</h3>
+                <ul class="footer-links">
+                    <li>数据格式: JSON/CSV</li>
+                    <li>API版本: v2</li>
+                    <li>更新频率: 每日</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>© 2024 英雄联盟数据分析中心 - 装备数据库</p>
+        </div>
+    </footer>
+
+    <script>
+        // 装备数据
+        const itemsData = [
+            {
+                id: 1,
+                name: "无尽之刃",
+                price: 3400,
+                ad: 70,
+                ap: 0,
+                health: 0,
+                armor: 0,
+                mr: 0,
+                category: "attack",
+                description: "提供大量攻击力和暴击伤害，是ADC的核心装备。"
+            },
+            {
+                id: 2,
+                name: "灭世者的死亡之帽",
+                price: 3600,
+                ad: 0,
+                ap: 120,
+                health: 0,
+                armor: 0,
+                mr: 0,
+                category: "ap",
+                description: "大幅提升法术强度，是AP英雄的终极装备。"
+            },
+            {
+                id: 3,
+                name: "兰顿之兆",
+                price: 2700,
+                ad: 0,
+                ap: 0,
+                health: 400,
+                armor: 60,
+                mr: 0,
+                category: "defense",
+                description: "提供大量护甲和生命值，针对物理伤害的防御装备。"
+            },
+            {
+                id: 4,
+                name: "三相之力",
+                price: 3333,
+                ad: 25,
+                ap: 0,
+                health: 200,
+                armor: 0,
+                mr: 0,
+                category: "attack",
+                description: "全面的属性加成，适合需要多种属性的战士英雄。"
+            },
+            {
+                id: 5,
+                name: "卢登的回声",
+                price: 3200,
+                ad: 0,
+                ap: 90,
+                health: 0,
+                armor: 0,
+                mr: 0,
+                category: "ap",
+                description: "提供法术强度和额外伤害，适合爆发型法师。"
+            },
+            {
+                id: 6,
+                name: "日炎圣盾",
+                price: 2700,
+                ad: 0,
+                ap: 0,
+                health: 450,
+                armor: 35,
+                mr: 0,
+                category: "defense",
+                description: "提供持续范围伤害，适合坦克英雄清线。"
+            }
+        ];
+
+        let currentCategory = 'all';
+        
+        function filterByCategory(category) {
+            currentCategory = category;
+            
+            // 更新标签状态
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderItems();
+        }
+        
+        function searchItems() {
+            renderItems();
+        }
+        
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('minPrice').value = '';
+            document.getElementById('maxPrice').value = '';
+            document.getElementById('minAD').value = '0';
+            document.getElementById('minAP').value = '0';
+            document.getElementById('sortBy').value = 'name';
+            
+            filterByCategory('all');
+        }
+        
+        function renderItems() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const minPrice = parseInt(document.getElementById('minPrice').value) || 0;
+            const maxPrice = parseInt(document.getElementById('maxPrice').value) || 99999;
+            const minAD = parseInt(document.getElementById('minAD').value) || 0;
+            const minAP = parseInt(document.getElementById('minAP').value) || 0;
+            const sortBy = document.getElementById('sortBy').value;
+            
+            let filteredItems = itemsData.filter(item => {
+                // 搜索条件
+                const nameMatch = item.name.toLowerCase().includes(searchTerm);
+                const priceMatch = item.price >= minPrice && item.price <= maxPrice;
+                const adMatch = item.ad >= minAD;
+                const apMatch = item.ap >= minAP;
+                const categoryMatch = currentCategory === 'all' || item.category === currentCategory;
+                
+                return nameMatch && priceMatch && adMatch && apMatch && categoryMatch;
+            });
+            
+            // 排序
+            filteredItems.sort((a, b) => {
+                if (sortBy === 'name') return a.name.localeCompare(b.name);
+                if (sortBy === 'price') return b.price - a.price;
+                if (sortBy === 'ad') return b.ad - a.ad;
+                if (sortBy === 'ap') return b.ap - a.ap;
+                return 0;
+            });
+            
+            // 渲染到页面
+            const grid = document.getElementById('itemsGrid');
+            grid.innerHTML = '';
+            
+            filteredItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                
+                card.innerHTML = `
+                    <div class="item-header">
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-price">${item.price}</div>
+                    </div>
+                    <p style="color: var(--lol-gold-light); opacity: 0.8; font-size: 0.9rem; margin-bottom: 1rem;">
+                        ${item.description}
+                    </p>
+                    <div class="item-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${item.ad}</div>
+                            <div class="stat-label">攻击力</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${item.ap}</div>
+                            <div class="stat-label">法强</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${item.health}</div>
+                            <div class="stat-label">生命值</div>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+            
+            if (filteredItems.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--lol-gold-light); opacity: 0.6;">
+                        <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <h3>未找到匹配的装备</h3>
+                        <p>请尝试调整搜索条件或选择其他分类</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function changePage(page) {
+            // 更新分页按钮状态
+            document.querySelectorAll('.page-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 这里可以添加分页逻辑
+            console.log('切换到第', page, '页');
+        }
+        
+        // 初始渲染
+        document.addEventListener('DOMContentLoaded', renderItems);
+    </script>
 </body>
 </html>
