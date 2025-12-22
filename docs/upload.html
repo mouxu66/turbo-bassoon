@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>数据上传 - LOL数据分析</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/js/upload.js" defer></script>
+    <style>
+        .upload-area {
+            border: 3px dashed #ccc;
+            border-radius: 10px;
+            padding: 60px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: #e8f5e8;
+        }
+        .preview-table {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-arrow-left"></i> 返回首页
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1><i class="fas fa-upload"></i> 数据上传与处理</h1>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> 
+            这是一个模拟上传系统。文件将在浏览器中处理，不会上传到服务器。
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>上传数据文件</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">数据类型：</label>
+                            <select id="dataType" class="form-control">
+                                <option value="items">装备数据 (CSV)</option>
+                                <option value="matches">比赛数据 (CSV)</option>
+                                <option value="json">JSON数据</option>
+                                <option value="custom">自定义格式</option>
+                            </select>
+                        </div>
+
+                        <div id="uploadArea" class="upload-area mb-3" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5>点击或拖放文件到此处</h5>
+                            <p class="text-muted">支持 CSV, JSON 格式</p>
+                            <p class="small">最大文件大小: 10MB</p>
+                        </div>
+                        <input type="file" id="fileInput" class="d-none" accept=".csv,.json,.txt">
+
+                        <div class="mb-3">
+                            <label class="form-label">处理选项：</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="validateData" checked>
+                                <label class="form-check-label" for="validateData">数据验证</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="removeDuplicates" checked>
+                                <label class="form-check-label" for="removeDuplicates">去重处理</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="generateStats">
+                                <label class="form-check-label" for="generateStats">生成统计</label>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary w-100" onclick="processFile()" id="processBtn" disabled>
+                            <i class="fas fa-cogs"></i> 处理文件
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>数据处理结果</h5>
+                        
+                        <div id="fileInfo" class="mb-3">
+                            <p class="text-muted">尚未选择文件</p>
+                        </div>
+
+                        <div id="previewSection" class="d-none">
+                            <h6>数据预览</h6>
+                            <div class="preview-table">
+                                <table class="table table-sm" id="previewTable">
+                                    <!-- 预览表格 -->
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="processResult" class="mt-3">
+                            <!-- 处理结果显示在这里 -->
+                        </div>
+
+                        <div class="mt-3" id="actionButtons" style="display: none;">
+                            <button class="btn btn-success" onclick="saveProcessedData()">
+                                <i class="fas fa-save"></i> 保存数据
+                            </button>
+                            <button class="btn btn-info ms-2" onclick="exportProcessedData()">
+                                <i class="fas fa-download"></i> 导出数据
+                            </button>
+                            <button class="btn btn-warning ms-2" onclick="analyzeUploadedData()">
+                                <i class="fas fa-chart-bar"></i> 立即分析
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5>示例数据</h5>
+                <p>下载示例数据文件进行测试：</p>
+                <div class="btn-group">
+                    <a href="/data/ItemTbl.csv" class="btn btn-outline-primary">
+                        <i class="fas fa-download"></i> 装备数据示例
+                    </a>
+                    <a href="/data/MatchTbl.csv" class="btn btn-outline-success ms-2">
+                        <i class="fas fa-download"></i> 比赛数据示例
+                    </a>
+                    <button class="btn btn-outline-info ms-2" onclick="generateSampleData()">
+                        <i class="fas fa-magic"></i> 生成示例数据
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

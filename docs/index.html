@@ -1,233 +1,223 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英雄联盟数据分析 - 完整版</title>
+    <title>英雄联盟数据分析 - 完整功能版</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #4a6bdf;
-            --secondary: #6c5ce7;
-            --accent: #fd79a8;
-        }
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-            font-family: 'Microsoft YaHei', sans-serif;
-        }
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
-        }
-        .hero-section {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 50px;
-            margin-top: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        .stat-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            transition: transform 0.3s;
-            height: 100%;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        .stat-icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-            color: var(--primary);
-        }
-        .feature-list li {
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .feature-list li:last-child {
-            border-bottom: none;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-weight: bold;
-        }
-        .footer {
-            margin-top: 50px;
-            padding: 20px;
-            background: rgba(0,0,0,0.1);
-            border-radius: 10px;
-            color: white;
-        }
-    </style>
+    <link href="/css/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/main.js" defer></script>
 </head>
 <body>
     <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
                 <i class="fas fa-trophy"></i> LOL数据分析
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/">首页</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/items/">装备数据</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/analysis/">比赛分析</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/data/">数据下载</a></li>
-                    <li class="nav-item"><a class="nav-link" href="https://mouxu.pythonanywhere.com" target="_blank">
-                        <i class="fas fa-bolt"></i> 动态版本
-                    </a></li>
-                </ul>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/"><i class="fas fa-home"></i> 首页</a>
+                <a class="nav-link" href="#items-section"><i class="fas fa-shield-alt"></i> 装备查询</a>
+                <a class="nav-link" href="#analysis-section"><i class="fas fa-chart-bar"></i> 数据分析</a>
+                <a class="nav-link" href="#upload-section"><i class="fas fa-upload"></i> 数据上传</a>
+                <a class="nav-link" href="/data/"><i class="fas fa-download"></i> 数据下载</a>
             </div>
         </div>
     </nav>
 
-    <!-- 主要内容 -->
-    <div class="container">
-        <div class="hero-section">
-            <div class="text-center mb-5">
-                <h1 class="display-4 fw-bold mb-3">🏆 英雄联盟数据分析平台</h1>
-                <p class="lead text-muted">基于PythonAnywhere + GitHub Pages的完整数据解决方案</p>
-            </div>
-            
-            <!-- 统计卡片 -->
-            <div class="row mb-5">
-                <div class="col-md-3 mb-4">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <h3>0</h3>
-                        <p class="text-muted">装备数量</p>
-                    </div>
+    <!-- 英雄区域 -->
+    <div class="hero">
+        <div class="container">
+            <h1 class="display-4">🏆 英雄联盟数据分析平台</h1>
+            <p class="lead">完整功能静态版本 - 无需服务器，直接在浏览器中运行</p>
+            <div class="stats">
+                <div class="stat-card">
+                    <h3 id="item-count">0</h3>
+                    <p>装备数量</p>
                 </div>
-                <div class="col-md-3 mb-4">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-gamepad"></i>
-                        </div>
-                        <h3>0</h3>
-                        <p class="text-muted">比赛记录</p>
-                    </div>
+                <div class="stat-card">
+                    <h3 id="match-count">0</h3>
+                    <p>比赛记录</p>
                 </div>
-                <div class="col-md-3 mb-4">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-database"></i>
-                        </div>
-                        <h3>0</h3>
-                        <p class="text-muted">总数据量</p>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-4">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-sync-alt"></i>
-                        </div>
-                        <h3>24/7</h3>
-                        <p class="text-muted">自动更新</p>
-                    </div>
+                <div class="stat-card">
+                    <h3 id="data-size">0</h3>
+                    <p>数据总量</p>
                 </div>
             </div>
-            
-            <!-- 功能简介 -->
-            <div class="row mb-5">
-                <div class="col-md-6">
-                    <h3 class="mb-4"><i class="fas fa-star text-warning"></i> 主要功能</h3>
-                    <ul class="feature-list list-unstyled">
-                        <li><i class="fas fa-check text-success me-2"></i> 装备属性查询与分析</li>
-                        <li><i class="fas fa-check text-success me-2"></i> 比赛数据统计与可视化</li>
-                        <li><i class="fas fa-check text-success me-2"></i> CSV文件上传与处理</li>
-                        <li><i class="fas fa-check text-success me-2"></i> 数据导出与分享</li>
-                        <li><i class="fas fa-check text-success me-2"></i> 多版本数据对比</li>
-                    </ul>
-                </div>
-                <div class="col-md-6">
-                    <h3 class="mb-4"><i class="fas fa-cogs text-info"></i> 技术特性</h3>
-                    <ul class="feature-list list-unstyled">
-                        <li><i class="fas fa-server me-2"></i> Flask + SQLite后端</li>
-                        <li><i class="fas fa-desktop me-2"></i> Bootstrap 5前端</li>
-                        <li><i class="fas fa-cloud me-2"></i> GitHub Pages自动部署</li>
-                        <li><i class="fas fa-bolt me-2"></i> PythonAnywhere动态处理</li>
-                        <li><i class="fas fa-mobile-alt me-2"></i> 响应式设计</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- 行动按钮 -->
-            <div class="text-center">
-                <a href="/items/" class="btn btn-primary btn-lg me-3">
-                    <i class="fas fa-search"></i> 浏览装备数据
-                </a>
-                <a href="/analysis/" class="btn btn-outline-primary btn-lg me-3">
-                    <i class="fas fa-chart-bar"></i> 查看比赛分析
-                </a>
-                <a href="https://mouxu.pythonanywhere.com" target="_blank" class="btn btn-success btn-lg">
-                    <i class="fas fa-upload"></i> 上传新数据
-                </a>
-            </div>
-        </div>
-        
-        <!-- 双站说明 -->
-        <div class="row mt-5">
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <h4><i class="fas fa-sitemap"></i> 双站协作架构说明</h4>
-                    <p class="mb-0">
-                        <strong>GitHub Pages（当前站点）</strong>: 静态展示，快速访问，数据分析结果展示<br>
-                        <strong>PythonAnywhere（动态站点）</strong>: 数据上传，实时处理，完整功能操作<br>
-                        数据自动同步，提供无缝用户体验
-                    </p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 页脚 -->
-        <div class="footer text-center">
-            <p>© 2024 英雄联盟数据分析平台 | 最后更新: 2025-12-22 01:59:30</p>
-            <p class="small">
-                <a href="https://github.com/mouxu66/turbo-bassoon" class="text-white me-3"><i class="fab fa-github"></i> GitHub仓库</a>
-                <a href="https://mouxu.pythonanywhere.com" class="text-white me-3"><i class="fas fa-external-link-alt"></i> 动态版本</a>
-                <a href="/about/" class="text-white"><i class="fas fa-info-circle"></i> 关于项目</a>
-            </p>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // 简单交互效果
-        document.addEventListener('DOMContentLoaded', function() {
-            // 统计卡片动画
-            const stats = document.querySelectorAll('.stat-card h3');
-            stats.forEach(stat => {
-                const target = parseInt(stat.textContent);
-                if (!isNaN(target) && target > 0) {
-                    let current = 0;
-                    const increment = target / 50;
-                    const timer = setInterval(() => {
-                        current += increment;
-                        if (current >= target) {
-                            current = target;
-                            clearInterval(timer);
-                        }
-                        stat.textContent = Math.floor(current);
-                    }, 30);
-                }
-            });
-        });
-    </script>
+    <!-- 功能区域 -->
+    <div class="container">
+        <!-- 装备查询 -->
+        <section id="items-section" class="section">
+            <h2><i class="fas fa-shield-alt"></i> 装备数据库</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <input type="text" id="search-item" class="form-control" placeholder="搜索装备名称...">
+                        </div>
+                        <div class="col-md-6">
+                            <select id="sort-items" class="form-control">
+                                <option value="name">按名称排序</option>
+                                <option value="price">按价格排序</option>
+                                <option value="ad">按攻击力排序</option>
+                                <option value="ap">按法强排序</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="items-container" class="table-responsive">
+                        <!-- 装备表格将通过JavaScript加载 -->
+                        <p class="text-center">加载装备数据中...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 数据分析 -->
+        <section id="analysis-section" class="section">
+            <h2><i class="fas fa-chart-bar"></i> 数据分析工具</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>装备属性分布</h5>
+                            <canvas id="item-chart" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>价格区间分析</h5>
+                            <canvas id="price-chart" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5>数据分析工具</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <button class="btn btn-primary w-100 mb-2" onclick="analyzeByPrice()">
+                                <i class="fas fa-money-bill-wave"></i> 价格分析
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-success w-100 mb-2" onclick="analyzeByStats()">
+                                <i class="fas fa-chart-line"></i> 属性分析
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-info w-100 mb-2" onclick="generateReport()">
+                                <i class="fas fa-file-export"></i> 生成报告
+                            </button>
+                        </div>
+                    </div>
+                    <div id="analysis-result" class="mt-3"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 数据上传（模拟） -->
+        <section id="upload-section" class="section">
+            <h2><i class="fas fa-upload"></i> 数据上传与处理</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        由于是静态网站，上传功能为模拟演示。实际数据将在浏览器中处理。
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">选择数据类型：</label>
+                        <select id="data-type" class="form-control">
+                            <option value="items">装备数据</option>
+                            <option value="matches">比赛数据</option>
+                            <option value="custom">自定义数据</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">上传CSV文件：</label>
+                        <input type="file" id="csv-upload" class="form-control" accept=".csv">
+                        <small class="text-muted">支持标准CSV格式，UTF-8编码</small>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="processUpload()">
+                        <i class="fas fa-cogs"></i> 处理数据
+                    </button>
+                    
+                    <div id="upload-result" class="mt-3"></div>
+                    
+                    <div class="mt-4">
+                        <h5>示例数据下载：</h5>
+                        <a href="/data/ItemTbl.csv" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-download"></i> 装备数据模板
+                        </a>
+                        <a href="/data/MatchTbl.csv" class="btn btn-outline-success btn-sm ms-2">
+                            <i class="fas fa-download"></i> 比赛数据模板
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 数据导出 -->
+        <section class="section">
+            <h2><i class="fas fa-download"></i> 数据导出</h2>
+            <div class="card">
+                <div class="card-body">
+                    <p>导出当前分析结果：</p>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary" onclick="exportJSON()">
+                            <i class="fas fa-file-code"></i> JSON格式
+                        </button>
+                        <button class="btn btn-outline-success" onclick="exportCSV()">
+                            <i class="fas fa-file-csv"></i> CSV格式
+                        </button>
+                        <button class="btn btn-outline-info" onclick="exportHTML()">
+                            <i class="fas fa-file-alt"></i> HTML报告
+                        </button>
+                    </div>
+                    <div id="export-result" class="mt-3"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2024 英雄联盟数据分析平台 - 纯静态功能版本</p>
+            <p class="small">
+                所有功能均在浏览器中运行，无需服务器支持。
+                数据来源：游戏API与社区数据。
+            </p>
+            <p class="small">
+                最后更新: <span id="last-update">加载中...</span> |
+                数据版本: <span id="data-version">1.0.0</span>
+            </p>
+        </div>
+    </footer>
+
+    <!-- 模态框（用于详情展示） -->
+    <div class="modal fade" id="itemModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="itemModalTitle">装备详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="itemModalBody">
+                    加载中...
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
