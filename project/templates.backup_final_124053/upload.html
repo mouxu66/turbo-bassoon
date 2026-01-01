@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>文件上传 - 英雄联盟数据分析</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { color: #333; }
+        .upload-box { border: 2px dashed #ccc; padding: 40px; text-align: center; margin: 20px 0; }
+        .btn { background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .back-link { display: block; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📁 文件上传</h1>
+        <p>上传英雄联盟数据文件进行分析</p>
+        
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="upload-box">
+                <p>将CSV文件拖放到此处，或点击选择文件</p>
+                <input type="file" id="fileInput" name="file" accept=".csv">
+                <br><br>
+                <button type="submit" class="btn">上传文件</button>
+            </div>
+        </form>
+        
+        <div id="result" style="margin-top: 20px;"></div>
+        
+        <a href="/" class="back-link">← 返回首页</a>
+    </div>
+    
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<p style="color: red;">请选择文件</p>';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            resultDiv.innerHTML = '<p>正在上传...</p>';
+            
+            fetch('/api/match/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div style="background: #d4edda; padding: 15px; border-radius: 5px;">
+                            <h3>✅ 上传成功！</h3>
+                            <p>文件: ${data.stats.filename}</p>
+                            <p>总记录数: ${data.stats.total_records}</p>
+                            <p>成功导入: ${data.stats.imported}</p>
+                            <p>跳过: ${data.stats.skipped}</p>
+                            <p>平均时长: ${data.stats.avg_duration} 分钟</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: red;">❌ 上传失败: ${data.error}</p>`;
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `<p style="color: red;">❌ 上传错误: ${error}</p>`;
+            });
+        });
+    </script>
+</body>
+</html>

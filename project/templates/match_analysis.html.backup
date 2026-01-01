@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}你的页面标题{% endblock %}
+
+{% block content %}
+<!-- 原有的HTML内容 -->
+{% endblock %}
+{% extends "layout.html" %}
+
+比赛数据分析{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-chart-bar me-2"></i>比赛数据分析
+        </h1>
+        <p class="lead mb-4">上传你的比赛数据文件，获取详细的统计分析报告</p>
+
+        {% if has_data %}
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+                <div class="card-lol text-center p-3">
+                    <div class="stat-number">{{ match_stats.stats.total }}</div>
+                    <p>已有比赛数据</p>
+                    <a href="/match_results" class="btn btn-lol">
+                        <i class="fas fa-eye me-2"></i>查看分析
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container">
+    <!-- 文件上传区域 -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="upload-area" id="uploadArea">
+                <div style="font-size: 4em; color: var(--lol-gold); margin-bottom: 20px;">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3 class="mb-3">点击或拖拽文件到此处上传</h3>
+                <p class="text-muted mb-4">支持 MatchTbl.csv 格式文件</p>
+                <input type="file" id="fileInput" class="d-none" accept=".csv">
+                <button class="btn btn-lol" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-file-upload me-2"></i>选择CSV文件
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 上传状态 -->
+    <div id="uploadStatus" class="mb-5" style="display: none;"></div>
+
+    <!-- 功能说明 -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card-lol p-4">
+                <h3 class="mb-4" style="color: #ffd700;">
+                    <i class="fas fa-info-circle me-2"></i>使用说明
+                </h3>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-file-csv me-2"></i>文件格式要求</h5>
+                        <ul>
+                            <li>必须为CSV格式文件</li>
+                            <li>包含以下列：MatchId, Patch, QueueType, RankFk, GameDuration</li>
+                            <li>编码建议使用UTF-8</li>
+                            <li>支持包含表头</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-chart-line me-2"></i>分析功能</h5>
+                        <ul>
+                            <li>游戏时长分布统计</li>
+                            <li>游戏模式分布分析</li>
+                            <li>段位分布统计</li>
+                            <li>版本趋势分析</li>
+                            <li>数据导出功能</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 如果有数据，显示操作按钮 -->
+    {% if has_data %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card-lol p-4">
+                <h3 class="mb-4" style="color: #ffd700;">
+                    <i class="fas fa-cogs me-2"></i>数据操作
+                </h3>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <a href="/match_results" class="btn btn-lol w-100">
+                            <i class="fas fa-chart-line me-2"></i>查看分析报告
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="/api/match/export" class="btn btn-lol w-100">
+                            <i class="fas fa-download me-2"></i>导出数据(CSV)
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-lol w-100" onclick="clearMatchData()">
+                            <i class="fas fa-trash me-2"></i>清除数据
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 文件上传处理
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        if (this.files.length > 0) {
+            uploadFile(this.files[0]);
+        }
+    });
+
+    // 拖拽上传
+    const uploadArea = document.getElementById('uploadArea');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight() {
+        uploadArea.style.borderColor = '#ffd700';
+        uploadArea.style.background = 'rgba(200, 170, 110, 0.1)';
+    }
+
+    function unhighlight() {
+        uploadArea.style.borderColor = '#c8aa6e';
+        uploadArea.style.background = 'rgba(200, 170, 110, 0.05)';
+    }
+
+    uploadArea.addEventListener('drop', function(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+            uploadFile(files[0]);
+        }
+    }, false);
+
+    // 上传文件函数
+    async function uploadFile(file) {
+        if (!file.name.endsWith('.csv')) {
+            alert('请上传CSV格式的文件');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const statusDiv = document.getElementById('uploadStatus');
+        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = `
+            <div class="card-lol p-4 text-center">
+                <div class="spinner-border text-warning" style="width: 3rem; height: 3rem;" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h4 class="mt-3">正在上传和分析数据...</h4>
+                <p class="text-muted">请稍候，这可能需要几秒钟时间</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch('/api/match/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                statusDiv.innerHTML = `
+                    <div class="card-lol p-4 text-center" style="border-color: #2ecc71;">
+                        <i class="fas fa-check-circle" style="font-size: 4em; color: #2ecc71;"></i>
+                        <h3 class="mt-3">数据导入成功！</h3>
+                        <div class="row mt-4">
+                            <div class="col-md-3">
+                                <p>总记录数: ${result.stats.total}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p>导入成功: ${result.stats.imported}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p>平均时长: ${result.stats.avg_duration}分钟</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p>游戏模式: ${result.stats.unique_modes}种</p>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <a href="/match_results" class="btn btn-lol me-3">
+                                <i class="fas fa-chart-line me-2"></i>查看详细分析
+                            </a>
+                            <button class="btn btn-lol" onclick="location.reload()">
+                                <i class="fas fa-redo me-2"></i>刷新页面
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="card-lol p-4 text-center" style="border-color: #e74c3c;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 4em; color: #e74c3c;"></i>
+                        <h3 class="mt-3">上传失败</h3>
+                        <p class="text-danger">${result.error}</p>
+                        <button class="btn btn-lol mt-3" onclick="location.reload()">
+                            <i class="fas fa-redo me-2"></i>重新尝试
+                        </button>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            statusDiv.innerHTML = `
+                <div class="card-lol p-4 text-center" style="border-color: #e74c3c;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 4em; color: #e74c3c;"></i>
+                    <h3 class="mt-3">网络错误</h3>
+                    <p class="text-danger">${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    // 清除数据函数
+    async function clearMatchData() {
+        if (!confirm('确定要清除所有比赛数据吗？此操作不可撤销！')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/match/clear', {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('数据已清除');
+                location.reload();
+            } else {
+                alert('清除失败: ' + result.error);
+            }
+        } catch (error) {
+            alert('清除失败: ' + error.message);
+        }
+    }
+</script>
+{% endblock %}

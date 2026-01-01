@@ -1,0 +1,6 @@
+match_id,game_version,game_duration,winner,blue_kills,red_kills,blue_gold,red_gold,blue_champ1,blue_champ2,blue_champ3,blue_champ4,blue_champ5,red_champ1,red_champ2,red_champ3,red_champ4,red_champ5
+KR_1234567890,14.24,1800,1,25,18,65000,58000,Zed,Orianna,Jarvan IV,Ashe,Nami,Jinx,Thresh,Sylas,Sett,Elise
+KR_1234567891,14.24,2100,2,17,23,58000,62000,Yasuo,Lee Sin,Ahri,Kai'Sa,Leona,Aatrox,Gragas,Zoe,Varus,Lux
+KR_1234567892,14.24,1950,1,28,15,68000,52000,Irelia,Vi,Syndra,Jhin,Blitzcrank,Darius,Evelynn,Twisted Fate,Miss Fortune,Nautilus
+KR_1234567893,14.23,1650,2,12,27,48000,59000,Riven,Kayn,Leblanc,Ezreal,Yuumi,Garen,Sejuani,Cassiopeia,Samira,Pyke
+KR_1234567894,14.23,2400,1,32,29,72000,69000,Fiora,Hecarim,Akali,Xayah,Rakan,Urgot,Kindred,Azir,Aphelios,Thresh

@@ -1,276 +1,975 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 比赛数据分析 - 英雄联盟数据分析中心</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <i class="fas fa-crown"></i>
+                <span>LOL数据分析中心</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/"><i class="fas fa-home"></i> 首页</a></li>
+                <li><a href="/items"><i class="fas fa-helmet-battle"></i> 装备数据</a></li>
+                <li><a href="/match_analysis" class="active"><i class="fas fa-chart-line"></i> 比赛分析</a></li>
+                <li><a href="/upload_match"><i class="fas fa-upload"></i> 上传比赛</a></li>
+                <li><a href="/about"><i class="fas fa-info-circle"></i> 关于</a></li>
+            </ul>
+        </div>
+    </nav>
 
-{% block title %}你的页面标题{% endblock %}
+    <!-- 英雄区域 -->
+    <section class="hero">
+        <h1><i class="fas fa-chart-line"></i> 比赛数据分析</h1>
+        <p>深度挖掘比赛数据，洞察胜利模式，优化战术策略</p>
+    </section>
 
-{% block content %}
-<!-- 原有的HTML内容 -->
-{% endblock %}
-{% extends "layout.html" %}
+    <!-- 数据概览 -->
+    <div class="card-grid">
+        <div class="card">
+            <h3><i class="fas fa-trophy"></i> 比赛总数</h3>
+            <p style="font-size: 2.5rem; font-weight: bold; color: var(--lol-gold);">{{ total_matches }}</p>
+            <p>已分析的有效比赛场次</p>
+        </div>
+        
+        <div class="card">
+            <h3><i class="fas fa-clock"></i> 平均时长</h3>
+            <p style="font-size: 2.5rem; font-weight: bold; color: var(--lol-blue);">{{ avg_duration // 60 }}分钟</p>
+            <p>平均每场比赛时长</p>
+        </div>
+        
+        <div class="card">
+            <h3><i class="fas fa-flag"></i> 蓝队胜率</h3>
+            <p style="font-size: 2.5rem; font-weight: bold; color: #4A90E2;">
+                {% if total_matches > 0 %}
+                    {{ (blue_wins * 100 / total_matches)|round(1) }}%
+                {% else %}0%{% endif %}
+            </p>
+            <p>蓝色方获胜比例</p>
+        </div>
+        
+        <div class="card">
+            <h3><i class="fas fa-flag"></i> 红队胜率</h3>
+            <p style="font-size: 2.5rem; font-weight: bold; color: #E24A4A;">
+                {% if total_matches > 0 %}
+                    {{ (red_wins * 100 / total_matches)|round(1) }}%
+                {% else %}0%{% endif %}
+            </p>
+            <p>红色方获胜比例</p>
+        </div>
+    </div>
 
-{% block title %}比赛数据分析{% endblock %}
-
-{% block content %}
-<div class="hero-section">
-    <div class="container">
-        <h1 class="display-4 mb-3">
-            <i class="fas fa-chart-bar me-2"></i>比赛数据分析
-        </h1>
-        <p class="lead mb-4">上传你的比赛数据文件，获取详细的统计分析报告</p>
-
-        {% if has_data %}
-        <div class="row justify-content-center">
-            <div class="col-md-4">
-                <div class="card-lol text-center p-3">
-                    <div class="stat-number">{{ match_stats.stats.total }}</div>
-                    <p>已有比赛数据</p>
-                    <a href="/match_results" class="btn btn-lol">
-                        <i class="fas fa-eye me-2"></i>查看分析
-                    </a>
+    <!-- 分析面板 -->
+    <div style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <!-- 胜率分析 -->
+            <div class="card">
+                <h3><i class="fas fa-chart-pie"></i> 游戏时长与胜率</h3>
+                <div style="height: 300px;">
+                    <canvas id="durationWinRateChart"></canvas>
                 </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem;">
+                    分析不同时长比赛的胜率分布
+                </p>
+            </div>
+            
+            <!-- 英雄数据 -->
+            <div class="card">
+                <h3><i class="fas fa-user"></i> 热门英雄统计</h3>
+                <div style="height: 300px;">
+                    <canvas id="popularChampionsChart"></canvas>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem;">
+                    出场率最高的10位英雄
+                </p>
             </div>
         </div>
-        {% endif %}
-    </div>
-</div>
 
-<div class="container">
-    <!-- 文件上传区域 -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="upload-area" id="uploadArea">
-                <div style="font-size: 4em; color: var(--lol-gold); margin-bottom: 20px;">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                </div>
-                <h3 class="mb-3">点击或拖拽文件到此处上传</h3>
-                <p class="text-muted mb-4">支持 MatchTbl.csv 格式文件</p>
-                <input type="file" id="fileInput" class="d-none" accept=".csv">
-                <button class="btn btn-lol" onclick="document.getElementById('fileInput').click()">
-                    <i class="fas fa-file-upload me-2"></i>选择CSV文件
+        <!-- 英雄详细数据 -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3><i class="fas fa-search"></i> 英雄数据查询</h3>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <input type="text" id="championSearch" placeholder="输入英雄名称（如：Zed, Yasuo）" 
+                       style="flex: 1; padding: 0.8rem; background: rgba(30, 35, 40, 0.8); 
+                              border: 2px solid var(--lol-gold); border-radius: 6px; color: var(--text-primary);">
+                <button onclick="loadChampionStats()" class="btn">
+                    <i class="fas fa-search"></i> 查询
+                </button>
+                <button onclick="loadAllChampions()" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> 查看全部
                 </button>
             </div>
+            
+            <div id="championStatsContainer">
+                <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                    <thead>
+                        <tr style="background: rgba(200, 170, 110, 0.1);">
+                            <th style="padding: 1rem; text-align: left;">英雄</th>
+                            <th style="padding: 1rem; text-align: center;">出场次数</th>
+                            <th style="padding: 1rem; text-align: center;">平均KDA</th>
+                            <th style="padding: 1rem; text-align: center;">胜率</th>
+                            <th style="padding: 1rem; text-align: center;">平均金币</th>
+                            <th style="padding: 1rem; text-align: center;">详细</th>
+                        </tr>
+                    </thead>
+                    <tbody id="championStatsBody">
+                        <!-- 数据由JavaScript动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 最近比赛 -->
+        <div class="card">
+            <h3><i class="fas fa-history"></i> 最近比赛</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                    <thead>
+                        <tr style="background: rgba(200, 170, 110, 0.1);">
+                            <th style="padding: 1rem; text-align: left;">比赛ID</th>
+                            <th style="padding: 1rem; text-align: center;">版本</th>
+                            <th style="padding: 1rem; text-align: center;">时长</th>
+                            <th style="padding: 1rem; text-align: center;">比分</th>
+                            <th style="padding: 1rem; text-align: center;">胜负</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for match in recent_matches %}
+                        <tr style="border-bottom: 1px solid rgba(200, 170, 110, 0.1);">
+                            <td style="padding: 1rem;">{{ match[0][:15] }}...</td>
+                            <td style="padding: 1rem; text-align: center;">{{ match[1] }}</td>
+                            <td style="padding: 1rem; text-align: center;">{{ match[2] // 60 }}分钟</td>
+                            <td style="padding: 1rem; text-align: center;">
+                                <span style="color: #4A90E2;">{{ match[4] }}</span> - 
+                                <span style="color: #E24A4A;">{{ match[5] }}</span>
+                            </td>
+                            <td style="padding: 1rem; text-align: center;">
+                                {% if match[3] == 1 %}
+                                <span style="color: #4A90E2; font-weight: bold;">蓝队胜</span>
+                                {% else %}
+                                <span style="color: #E24A4A; font-weight: bold;">红队胜</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 阵容分析 -->
+        <div class="card" style="margin-top: 2rem;">
+            <h3><i class="fas fa-users"></i> 热门阵容分析</h3>
+            <div style="height: 400px;">
+                <canvas id="teamCompositionChart"></canvas>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem;">
+                最常见的阵容组合及其胜率
+            </p>
         </div>
     </div>
 
-    <!-- 上传状态 -->
-    <div id="uploadStatus" class="mb-5" style="display: none;"></div>
-
-    <!-- 功能说明 -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card-lol p-4">
-                <h3 class="mb-4" style="color: #ffd700;">
-                    <i class="fas fa-info-circle me-2"></i>使用说明
-                </h3>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5><i class="fas fa-file-csv me-2"></i>文件格式要求</h5>
-                        <ul>
-                            <li>必须为CSV格式文件</li>
-                            <li>包含以下列：MatchId, Patch, QueueType, RankFk, GameDuration</li>
-                            <li>编码建议使用UTF-8</li>
-                            <li>支持包含表头</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h5><i class="fas fa-chart-line me-2"></i>分析功能</h5>
-                        <ul>
-                            <li>游戏时长分布统计</li>
-                            <li>游戏模式分布分析</li>
-                            <li>段位分布统计</li>
-                            <li>版本趋势分析</li>
-                            <li>数据导出功能</li>
-                        </ul>
-                    </div>
-                </div>
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>比赛分析功能</h4>
+                <p style="color: var(--text-secondary); margin-top: 1rem;">
+                    提供深度比赛数据分析，包括胜率统计、英雄表现、阵容组合等。
+                </p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>数据来源</h4>
+                <ul class="footer-links">
+                    <li><a href="/upload_match">上传比赛数据</a></li>
+                    <li><a href="#">Riot Games API</a></li>
+                    <li><a href="#">社区贡献</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>分析工具</h4>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="loadWinRateAnalysis()">胜率分析</a></li>
+                    <li><a href="#" onclick="loadAllChampions()">英雄统计</a></li>
+                    <li><a href="#" onclick="loadTeamComposition()">阵容分析</a></li>
+                </ul>
             </div>
         </div>
-    </div>
+    </footer>
 
-    <!-- 如果有数据，显示操作按钮 -->
-    {% if has_data %}
-    <div class="row">
-        <div class="col-12">
-            <div class="card-lol p-4">
-                <h3 class="mb-4" style="color: #ffd700;">
-                    <i class="fas fa-cogs me-2"></i>数据操作
-                </h3>
-
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <a href="/match_results" class="btn btn-lol w-100">
-                            <i class="fas fa-chart-line me-2"></i>查看分析报告
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="/api/match/export" class="btn btn-lol w-100">
-                            <i class="fas fa-download me-2"></i>导出数据(CSV)
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <button class="btn btn-lol w-100" onclick="clearMatchData()">
-                            <i class="fas fa-trash me-2"></i>清除数据
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // 文件上传处理
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        if (this.files.length > 0) {
-            uploadFile(this.files[0]);
-        }
-    });
-
-    // 拖拽上传
-    const uploadArea = document.getElementById('uploadArea');
-
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, preventDefaults, false);
-    });
-
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, highlight, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, unhighlight, false);
-    });
-
-    function highlight() {
-        uploadArea.style.borderColor = '#ffd700';
-        uploadArea.style.background = 'rgba(200, 170, 110, 0.1)';
-    }
-
-    function unhighlight() {
-        uploadArea.style.borderColor = '#c8aa6e';
-        uploadArea.style.background = 'rgba(200, 170, 110, 0.05)';
-    }
-
-    uploadArea.addEventListener('drop', function(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        if (files.length > 0) {
-            uploadFile(files[0]);
-        }
-    }, false);
-
-    // 上传文件函数
-    async function uploadFile(file) {
-        if (!file.name.endsWith('.csv')) {
-            alert('请上传CSV格式的文件');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const statusDiv = document.getElementById('uploadStatus');
-        statusDiv.style.display = 'block';
-        statusDiv.innerHTML = `
-            <div class="card-lol p-4 text-center">
-                <div class="spinner-border text-warning" style="width: 3rem; height: 3rem;" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <h4 class="mt-3">正在上传和分析数据...</h4>
-                <p class="text-muted">请稍候，这可能需要几秒钟时间</p>
-            </div>
-        `;
-
-        try {
-            const response = await fetch('/api/match/upload', {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                statusDiv.innerHTML = `
-                    <div class="card-lol p-4 text-center" style="border-color: #2ecc71;">
-                        <i class="fas fa-check-circle" style="font-size: 4em; color: #2ecc71;"></i>
-                        <h3 class="mt-3">数据导入成功！</h3>
-                        <div class="row mt-4">
-                            <div class="col-md-3">
-                                <p>总记录数: ${result.stats.total}</p>
-                            </div>
-                            <div class="col-md-3">
-                                <p>导入成功: ${result.stats.imported}</p>
-                            </div>
-                            <div class="col-md-3">
-                                <p>平均时长: ${result.stats.avg_duration}分钟</p>
-                            </div>
-                            <div class="col-md-3">
-                                <p>游戏模式: ${result.stats.unique_modes}种</p>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <a href="/match_results" class="btn btn-lol me-3">
-                                <i class="fas fa-chart-line me-2"></i>查看详细分析
-                            </a>
-                            <button class="btn btn-lol" onclick="location.reload()">
-                                <i class="fas fa-redo me-2"></i>刷新页面
-                            </button>
-                        </div>
-                    </div>
-                `;
-            } else {
-                statusDiv.innerHTML = `
-                    <div class="card-lol p-4 text-center" style="border-color: #e74c3c;">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 4em; color: #e74c3c;"></i>
-                        <h3 class="mt-3">上传失败</h3>
-                        <p class="text-danger">${result.error}</p>
-                        <button class="btn btn-lol mt-3" onclick="location.reload()">
-                            <i class="fas fa-redo me-2"></i>重新尝试
-                        </button>
-                    </div>
-                `;
+    <script>
+        // 初始化图表
+        let durationChart, championsChart, compositionChart;
+        
+        // 加载胜率分析
+        async function loadWinRateAnalysis() {
+            try {
+                const response = await fetch('/api/analysis/win_rate');
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    const ctx = document.getElementById('durationWinRateChart').getContext('2d');
+                    
+                    if (durationChart) durationChart.destroy();
+                    
+                    durationChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.data.map(d => d.duration_range),
+                            datasets: [{
+                                label: '蓝队胜率',
+                                data: data.data.map(d => d.blue_win_rate),
+                                backgroundColor: 'rgba(74, 144, 226, 0.7)',
+                                borderColor: 'rgba(74, 144, 226, 1)',
+                                borderWidth: 1
+                            }, {
+                                label: '红队胜率',
+                                data: data.data.map(d => d.red_win_rate),
+                                backgroundColor: 'rgba(226, 74, 74, 0.7)',
+                                borderColor: 'rgba(226, 74, 74, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    title: {
+                                        display: true,
+                                        text: '胜率 (%)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('加载胜率分析失败:', error);
             }
-        } catch (error) {
-            statusDiv.innerHTML = `
-                <div class="card-lol p-4 text-center" style="border-color: #e74c3c;">
-                    <i class="fas fa-exclamation-circle" style="font-size: 4em; color: #e74c3c;"></i>
-                    <h3 class="mt-3">网络错误</h3>
-                    <p class="text-danger">${error.message}</p>
-                </div>
-            `;
         }
-    }
-
-    // 清除数据函数
-    async function clearMatchData() {
-        if (!confirm('确定要清除所有比赛数据吗？此操作不可撤销！')) {
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/match/clear', {
-                method: 'POST'
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert('数据已清除');
-                location.reload();
-            } else {
-                alert('清除失败: ' + result.error);
+        
+        // 加载英雄数据
+        async function loadChampionStats(champion = '') {
+            try {
+                let url = '/api/analysis/champion_stats';
+                if (champion) {
+                    url += `?champion=${encodeURIComponent(champion)}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateChampionTable(data.data);
+                    
+                    // 如果是查询所有英雄，也更新图表
+                    if (!champion) {
+                        updatePopularChampionsChart(data.data.slice(0, 10));
+                    }
+                }
+            } catch (error) {
+                console.error('加载英雄数据失败:', error);
             }
-        } catch (error) {
-            alert('清除失败: ' + error.message);
         }
-    }
-</script>
-{% endblock %}
+        
+        // 加载所有英雄
+        async function loadAllChampions() {
+            document.getElementById('championSearch').value = '';
+            await loadChampionStats();
+        }
+        
+        // 更新英雄表格
+        function updateChampionTable(champions) {
+            const tbody = document.getElementById('championStatsBody');
+            tbody.innerHTML = '';
+            
+            champions.forEach(champ => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid rgba(200, 170, 110, 0.1)';
+                
+                row.innerHTML = `
+                    <td style="padding: 1rem;">
+                        <strong style="color: var(--lol-gold);">${champ.champion}</strong>
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">${champ.games}</td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <span style="color: ${champ.kda >= 3 ? '#4CAF50' : '#FF9800'}; font-weight: bold;">
+                            ${champ.kda}
+                        </span>
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <span style="color: ${champ.win_rate >= 50 ? '#4CAF50' : '#E24A4A'}; font-weight: bold;">
+                            ${champ.win_rate}%
+                        </span>
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">
+                        ${champ.gold.toLocaleString()}
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <button onclick="showChampionDetail('${champ.champion}')" class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.9rem;">
+                            详情
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // 更新热门英雄图表
+        function updatePopularChampionsChart(champions) {
+            const ctx = document.getElementById('popularChampionsChart').getContext('2d');
+            
+            if (championsChart) championsChart.destroy();
+            
+            championsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: champions.map(c => c.champion),
+                    datasets: [{
+                        data: champions.map(c => c.games),
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+                            '#9966FF', '#FF9F40', '#8AC926', '#1982C4',
+                            '#6A4C93', '#FF595E'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: 'var(--text-primary)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 加载阵容分析
+        async function loadTeamComposition() {
+            try {
+                const response = await fetch('/api/analysis/team_composition');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const ctx = document.getElementById('teamCompositionChart').getContext('2d');
+                    
+                    if (compositionChart) compositionChart.destroy();
+                    
+                    compositionChart = new Chart(ctx, {
+                        type: 'horizontalBar',
+                        data: {
+                            labels: data.data.map(d => d.composition.split(',').slice(0, 3).join(',') + '...'),
+                            datasets: [{
+                                label: '胜率 (%)',
+                                data: data.data.map(d => d.win_rate),
+                                backgroundColor: data.data.map(d => 
+                                    d.win_rate >= 50 ? 'rgba(76, 175, 80, 0.7)' : 'rgba(226, 74, 74, 0.7)'
+                                ),
+                                borderColor: data.data.map(d => 
+                                    d.win_rate >= 50 ? 'rgba(76, 175, 80, 1)' : 'rgba(226, 74, 74, 1)'
+                                ),
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    title: {
+                                        display: true,
+                                        text: '胜率 (%)'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const data = context.dataset.data[context.dataIndex];
+                                            const comp = data.context.composition;
+                                            const freq = data.context.frequency;
+                                            return `阵容: ${comp}\n出场: ${freq}次\n胜率: ${data}%`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // 为图表数据添加上下文
+                    compositionChart.data.datasets[0].data = compositionChart.data.datasets[0].data.map((value, index) => ({
+                        value: value,
+                        context: data.data[index]
+                    }));
+                }
+            } catch (error) {
+                console.error('加载阵容分析失败:', error);
+            }
+        }
+        
+        // 英雄详情弹窗
+        function showChampionDetail(champion) {
+            alert(`即将显示 ${champion} 的详细分析...\n\n此功能正在开发中，敬请期待！`);
+        }
+        
+        // 搜索英雄
+        document.getElementById('championSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const champion = this.value.trim();
+                if (champion) {
+                    loadChampionStats(champion);
+                }
+            }
+        });
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWinRateAnalysis();
+            loadChampionStats();
+            loadTeamComposition();
+        });
+    </script>
+    
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(200, 170, 110, 0.1);
+        }
+        
+        th {
+            background-color: rgba(200, 170, 110, 0.1);
+            font-weight: 600;
+            color: var(--lol-gold);
+        }
+        
+        tr:hover {
+            background-color: rgba(200, 170, 110, 0.05);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+
+
+
+
+cd /home/mouxu/project
+
+# 创建match_analysis.html
+cat > templates/match_analysis.html << 'EOF'
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 比赛数据分析 - 英雄联盟数据分析中心</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <i class="fas fa-crown"></i>
+                <span>LOL数据分析中心</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/"><i class="fas fa-home"></i> 首页</a></li>
+                <li><a href="/items"><i class="fas fa-helmet-battle"></i> 装备数据</a></li>
+                <li><a href="/match_analysis" class="active"><i class="fas fa-chart-line"></i> 比赛分析</a></li>
+                <li><a href="/upload_match"><i class="fas fa-upload"></i> 上传比赛</a></li>
+                <li><a href="/about"><i class="fas fa-info-circle"></i> 关于</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 英雄区域 -->
+    <section class="hero">
+        <h1><i class="fas fa-chart-line"></i> 比赛数据分析</h1>
+        <p>深度挖掘比赛数据，洞察胜利模式，优化战术策略</p>
+    </section>
+
+    <!-- 数据概览 -->
+    <div class="card-grid">
+        <div class="card">
+            <h3><i class="fas fa-trophy"></i> 比赛总数</h3>
+            <p style="font-size: 2.5rem; font-weight: bold; color: var(--lol-gold);">{{ total_matches }}</p>
+            <p>已分析的有效比赛场次</p>
+        </div>
+        
+        <div class="card">
+            <h3><i class="fas fa-clock"></i> 平均时长</h3>
+            <p style="font-size: 2.5rem; font-weight: bold; color: var(--lol-blue);">{{ avg_duration // 60 }}分钟</p>
+            <p>平均每场比赛时长</p>
+        </div>
+        
+        <div class="card">
+            <h3><i class="fas fa-flag"></i> 蓝队胜率</h3>
+            <p style="font-size: 2.5rem; font-weight: bold; color: #4A90E2;">
+                {% if total_matches > 0 %}
+                    {{ (blue_wins * 100 / total_matches)|round(1) }}%
+                {% else %}0%{% endif %}
+            </p>
+            <p>蓝色方获胜比例</p>
+        </div>
+        
+        <div class="card">
+            <h3><i class="fas fa-flag"></i> 红队胜率</h3>
+            <p style="font-size: 2.5rem; font-weight: bold; color: #E24A4A;">
+                {% if total_matches > 0 %}
+                    {{ (red_wins * 100 / total_matches)|round(1) }}%
+                {% else %}0%{% endif %}
+            </p>
+            <p>红色方获胜比例</p>
+        </div>
+    </div>
+
+    <!-- 分析面板 -->
+    <div style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <!-- 胜率分析 -->
+            <div class="card">
+                <h3><i class="fas fa-chart-pie"></i> 游戏时长与胜率</h3>
+                <div style="height: 300px;">
+                    <canvas id="durationWinRateChart"></canvas>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem;">
+                    分析不同时长比赛的胜率分布
+                </p>
+            </div>
+            
+            <!-- 英雄数据 -->
+            <div class="card">
+                <h3><i class="fas fa-user"></i> 热门英雄统计</h3>
+                <div style="height: 300px;">
+                    <canvas id="popularChampionsChart"></canvas>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem;">
+                    出场率最高的10位英雄
+                </p>
+            </div>
+        </div>
+
+        <!-- 英雄详细数据 -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3><i class="fas fa-search"></i> 英雄数据查询</h3>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <input type="text" id="championSearch" placeholder="输入英雄名称（如：Zed, Yasuo）" 
+                       style="flex: 1; padding: 0.8rem; background: rgba(30, 35, 40, 0.8); 
+                              border: 2px solid var(--lol-gold); border-radius: 6px; color: var(--text-primary);">
+                <button onclick="loadChampionStats()" class="btn">
+                    <i class="fas fa-search"></i> 查询
+                </button>
+                <button onclick="loadAllChampions()" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> 查看全部
+                </button>
+            </div>
+            
+            <div id="championStatsContainer">
+                <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                    <thead>
+                        <tr style="background: rgba(200, 170, 110, 0.1);">
+                            <th style="padding: 1rem; text-align: left;">英雄</th>
+                            <th style="padding: 1rem; text-align: center;">出场次数</th>
+                            <th style="padding: 1rem; text-align: center;">平均KDA</th>
+                            <th style="padding: 1rem; text-align: center;">胜率</th>
+                            <th style="padding: 1rem; text-align: center;">平均金币</th>
+                            <th style="padding: 1rem; text-align: center;">详细</th>
+                        </tr>
+                    </thead>
+                    <tbody id="championStatsBody">
+                        <!-- 数据由JavaScript动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 最近比赛 -->
+        <div class="card">
+            <h3><i class="fas fa-history"></i> 最近比赛</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; color: var(--text-primary);">
+                    <thead>
+                        <tr style="background: rgba(200, 170, 110, 0.1);">
+                            <th style="padding: 1rem; text-align: left;">比赛ID</th>
+                            <th style="padding: 1rem; text-align: center;">版本</th>
+                            <th style="padding: 1rem; text-align: center;">时长</th>
+                            <th style="padding: 1rem; text-align: center;">比分</th>
+                            <th style="padding: 1rem; text-align: center;">胜负</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for match in recent_matches %}
+                        <tr style="border-bottom: 1px solid rgba(200, 170, 110, 0.1);">
+                            <td style="padding: 1rem;">{{ match[0][:15] }}...</td>
+                            <td style="padding: 1rem; text-align: center;">{{ match[1] }}</td>
+                            <td style="padding: 1rem; text-align: center;">{{ match[2] // 60 }}分钟</td>
+                            <td style="padding: 1rem; text-align: center;">
+                                <span style="color: #4A90E2;">{{ match[4] }}</span> - 
+                                <span style="color: #E24A4A;">{{ match[5] }}</span>
+                            </td>
+                            <td style="padding: 1rem; text-align: center;">
+                                {% if match[3] == 1 %}
+                                <span style="color: #4A90E2; font-weight: bold;">蓝队胜</span>
+                                {% else %}
+                                <span style="color: #E24A4A; font-weight: bold;">红队胜</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 阵容分析 -->
+        <div class="card" style="margin-top: 2rem;">
+            <h3><i class="fas fa-users"></i> 热门阵容分析</h3>
+            <div style="height: 400px;">
+                <canvas id="teamCompositionChart"></canvas>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem;">
+                最常见的阵容组合及其胜率
+            </p>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>比赛分析功能</h4>
+                <p style="color: var(--text-secondary); margin-top: 1rem;">
+                    提供深度比赛数据分析，包括胜率统计、英雄表现、阵容组合等。
+                </p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>数据来源</h4>
+                <ul class="footer-links">
+                    <li><a href="/upload_match">上传比赛数据</a></li>
+                    <li><a href="#">Riot Games API</a></li>
+                    <li><a href="#">社区贡献</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>分析工具</h4>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="loadWinRateAnalysis()">胜率分析</a></li>
+                    <li><a href="#" onclick="loadAllChampions()">英雄统计</a></li>
+                    <li><a href="#" onclick="loadTeamComposition()">阵容分析</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 初始化图表
+        let durationChart, championsChart, compositionChart;
+        
+        // 加载胜率分析
+        async function loadWinRateAnalysis() {
+            try {
+                const response = await fetch('/api/analysis/win_rate');
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    const ctx = document.getElementById('durationWinRateChart').getContext('2d');
+                    
+                    if (durationChart) durationChart.destroy();
+                    
+                    durationChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.data.map(d => d.duration_range),
+                            datasets: [{
+                                label: '蓝队胜率',
+                                data: data.data.map(d => d.blue_win_rate),
+                                backgroundColor: 'rgba(74, 144, 226, 0.7)',
+                                borderColor: 'rgba(74, 144, 226, 1)',
+                                borderWidth: 1
+                            }, {
+                                label: '红队胜率',
+                                data: data.data.map(d => d.red_win_rate),
+                                backgroundColor: 'rgba(226, 74, 74, 0.7)',
+                                borderColor: 'rgba(226, 74, 74, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    title: {
+                                        display: true,
+                                        text: '胜率 (%)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('加载胜率分析失败:', error);
+            }
+        }
+        
+        // 加载英雄数据
+        async function loadChampionStats(champion = '') {
+            try {
+                let url = '/api/analysis/champion_stats';
+                if (champion) {
+                    url += `?champion=${encodeURIComponent(champion)}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateChampionTable(data.data);
+                    
+                    // 如果是查询所有英雄，也更新图表
+                    if (!champion) {
+                        updatePopularChampionsChart(data.data.slice(0, 10));
+                    }
+                }
+            } catch (error) {
+                console.error('加载英雄数据失败:', error);
+            }
+        }
+        
+        // 加载所有英雄
+        async function loadAllChampions() {
+            document.getElementById('championSearch').value = '';
+            await loadChampionStats();
+        }
+        
+        // 更新英雄表格
+        function updateChampionTable(champions) {
+            const tbody = document.getElementById('championStatsBody');
+            tbody.innerHTML = '';
+            
+            champions.forEach(champ => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid rgba(200, 170, 110, 0.1)';
+                
+                row.innerHTML = `
+                    <td style="padding: 1rem;">
+                        <strong style="color: var(--lol-gold);">${champ.champion}</strong>
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">${champ.games}</td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <span style="color: ${champ.kda >= 3 ? '#4CAF50' : '#FF9800'}; font-weight: bold;">
+                            ${champ.kda}
+                        </span>
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <span style="color: ${champ.win_rate >= 50 ? '#4CAF50' : '#E24A4A'}; font-weight: bold;">
+                            ${champ.win_rate}%
+                        </span>
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">
+                        ${champ.gold.toLocaleString()}
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <button onclick="showChampionDetail('${champ.champion}')" class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.9rem;">
+                            详情
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // 更新热门英雄图表
+        function updatePopularChampionsChart(champions) {
+            const ctx = document.getElementById('popularChampionsChart').getContext('2d');
+            
+            if (championsChart) championsChart.destroy();
+            
+            championsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: champions.map(c => c.champion),
+                    datasets: [{
+                        data: champions.map(c => c.games),
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+                            '#9966FF', '#FF9F40', '#8AC926', '#1982C4',
+                            '#6A4C93', '#FF595E'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: 'var(--text-primary)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 加载阵容分析
+        async function loadTeamComposition() {
+            try {
+                const response = await fetch('/api/analysis/team_composition');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const ctx = document.getElementById('teamCompositionChart').getContext('2d');
+                    
+                    if (compositionChart) compositionChart.destroy();
+                    
+                    compositionChart = new Chart(ctx, {
+                        type: 'horizontalBar',
+                        data: {
+                            labels: data.data.map(d => d.composition.split(',').slice(0, 3).join(',') + '...'),
+                            datasets: [{
+                                label: '胜率 (%)',
+                                data: data.data.map(d => d.win_rate),
+                                backgroundColor: data.data.map(d => 
+                                    d.win_rate >= 50 ? 'rgba(76, 175, 80, 0.7)' : 'rgba(226, 74, 74, 0.7)'
+                                ),
+                                borderColor: data.data.map(d => 
+                                    d.win_rate >= 50 ? 'rgba(76, 175, 80, 1)' : 'rgba(226, 74, 74, 1)'
+                                ),
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    title: {
+                                        display: true,
+                                        text: '胜率 (%)'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const data = context.dataset.data[context.dataIndex];
+                                            const comp = data.context.composition;
+                                            const freq = data.context.frequency;
+                                            return `阵容: ${comp}\n出场: ${freq}次\n胜率: ${data}%`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // 为图表数据添加上下文
+                    compositionChart.data.datasets[0].data = compositionChart.data.datasets[0].data.map((value, index) => ({
+                        value: value,
+                        context: data.data[index]
+                    }));
+                }
+            } catch (error) {
+                console.error('加载阵容分析失败:', error);
+            }
+        }
+        
+        // 英雄详情弹窗
+        function showChampionDetail(champion) {
+            alert(`即将显示 ${champion} 的详细分析...\n\n此功能正在开发中，敬请期待！`);
+        }
+        
+        // 搜索英雄
+        document.getElementById('championSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const champion = this.value.trim();
+                if (champion) {
+                    loadChampionStats(champion);
+                }
+            }
+        });
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWinRateAnalysis();
+            loadChampionStats();
+            loadTeamComposition();
+        });
+    </script>
+    
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(200, 170, 110, 0.1);
+        }
+        
+        th {
+            background-color: rgba(200, 170, 110, 0.1);
+            font-weight: 600;
+            color: var(--lol-gold);
+        }
+        
+        tr:hover {
+            background-color: rgba(200, 170, 110, 0.05);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</body>
+</html>

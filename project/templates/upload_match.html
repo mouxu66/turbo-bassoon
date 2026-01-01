@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📤 上传比赛数据 - 英雄联盟数据分析中心</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <i class="fas fa-crown"></i>
+                <span>LOL数据分析中心</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/"><i class="fas fa-home"></i> 首页</a></li>
+                <li><a href="/items"><i class="fas fa-helmet-battle"></i> 装备数据</a></li>
+                <li><a href="/match_analysis"><i class="fas fa-chart-line"></i> 比赛分析</a></li>
+                <li><a href="/upload_match" class="active"><i class="fas fa-upload"></i> 上传比赛</a></li>
+                <li><a href="/about"><i class="fas fa-info-circle"></i> 关于</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div style="max-width: 800px; margin: 3rem auto; padding: 0 1rem;">
+        <div class="card">
+            <h1><i class="fas fa-cloud-upload-alt"></i> 上传比赛数据</h1>
+            
+            {% if error %}
+            <div style="background: rgba(226, 74, 74, 0.1); border: 1px solid rgba(226, 74, 74, 0.3); 
+                        padding: 1rem; border-radius: 6px; margin: 1.5rem 0; color: #E24A4A;">
+                <i class="fas fa-exclamation-circle"></i> {{ error }}
+            </div>
+            {% endif %}
+            
+            {% if success %}
+            <div style="background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); 
+                        padding: 1rem; border-radius: 6px; margin: 1.5rem 0; color: #4CAF50;">
+                <i class="fas fa-check-circle"></i> {{ message }}
+                <p style="margin-top: 0.5rem;">
+                    <a href="/match_analysis" class="btn" style="padding: 0.5rem 1rem;">
+                        查看分析结果
+                    </a>
+                </p>
+            </div>
+            {% endif %}
+            
+            <form method="POST" enctype="multipart/form-data" style="margin-top: 2rem;">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">
+                        <i class="fas fa-file-csv"></i> 选择CSV文件
+                    </label>
+                    <input type="file" name="file" accept=".csv" required
+                           style="width: 100%; padding: 1rem; background: rgba(30, 35, 40, 0.8); 
+                                  border: 2px dashed var(--lol-gold); border-radius: 8px; 
+                                  color: var(--text-primary);">
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">
+                        数据来源
+                    </label>
+                    <select style="width: 100%; padding: 0.8rem; background: rgba(30, 35, 40, 0.8); 
+                              border: 1px solid var(--lol-gold); border-radius: 6px; color: var(--text-primary);">
+                        <option value="riot_api">Riot Games API</option>
+                        <option value="opgg">OP.GG</option>
+                        <option value="porofessor">Porofessor</option>
+                        <option value="manual">手动记录</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn" style="width: 100%; padding: 1rem; font-size: 1.1rem;">
+                    <i class="fas fa-upload"></i> 上传并分析数据
+                </button>
+            </form>
+            
+            <div style="margin-top: 3rem; background: rgba(200, 170, 110, 0.05); padding: 1.5rem; border-radius: 8px;">
+                <h3><i class="fas fa-info-circle"></i> 文件格式说明</h3>
+                <p style="color: var(--text-secondary); margin-top: 1rem;">
+                    支持的CSV格式应包含以下列（部分为可选）：
+                </p>
+                <ul style="color: var(--text-secondary); margin-top: 1rem; padding-left: 1.5rem;">
+                    <li><code>match_id</code> - 比赛ID（必填）</li>
+                    <li><code>game_version</code> - 游戏版本</li>
+                    <li><code>game_duration</code> - 游戏时长（秒）</li>
+                    <li><code>winner</code> - 获胜方（1=蓝队，2=红队）</li>
+                    <li><code>blue_kills</code> / <code>red_kills</code> - 队伍击杀数</li>
+                    <li><code>blue_gold</code> / <code>red_gold</code> - 队伍金币</li>
+                    <li><code>blue_champ1..5</code> / <code>red_champ1..5</code> - 英雄选择</li>
+                </ul>
+                
+                <div style="margin-top: 1.5rem;">
+                    <a href="/static/samples/match_data_sample.csv" download 
+                       class="btn btn-secondary" style="padding: 0.8rem 1.5rem;">
+                        <i class="fas fa-download"></i> 下载示例文件
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>数据上传</h4>
+                <p style="color: var(--text-secondary);">
+                    上传您的比赛数据，获取深度分析和个性化洞察。
+                </p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>支持格式</h4>
+                <ul class="footer-links">
+                    <li><a href="#">CSV格式</a></li>
+                    <li><a href="#">JSON格式（即将支持）</a></li>
+                    <li><a href="#">Excel格式（即将支持）</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

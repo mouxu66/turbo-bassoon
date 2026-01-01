@@ -1,0 +1,492 @@
+/* 英雄联盟主题样式 */
+:root {
+    /* 英雄联盟主题色 */
+    --lol-gold: #C8AA6E;
+    --lol-gold-dark: #937341;
+    --lol-gold-light: #F0E6D2;
+    --lol-blue: #0AC8B9;
+    --lol-purple: #C8AAE5;
+    --lol-red: #DA2C43;
+    --lol-green: #1EB980;
+    --lol-bg-dark: #0A1428;
+    --lol-bg-darker: #010A13;
+    --lol-bg-gradient: linear-gradient(135deg, #0A1428 0%, #1E2A47 100%);
+}
+
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Beaufort for LOL', 'Microsoft YaHei', sans-serif;
+    background: var(--lol-bg-gradient);
+    color: var(--lol-gold-light);
+    min-height: 100vh;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* 英雄联盟字体 */
+@font-face {
+    font-family: 'Beaufort for LOL';
+    src: url('https://fonts.cdnfonts.com/css/beaufort-for-lol');
+}
+
+/* 导航栏 */
+.navbar {
+    background: rgba(10, 20, 40, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid var(--lol-gold);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--lol-gold);
+    text-decoration: none;
+}
+
+.logo-icon {
+    font-size: 2rem;
+    color: var(--lol-gold);
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+}
+
+.nav-link {
+    color: var(--lol-gold-light);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.nav-link:hover {
+    color: var(--lol-gold);
+    background: rgba(200, 170, 110, 0.1);
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--lol-gold);
+    transition: all 0.3s;
+    transform: translateX(-50%);
+}
+
+.nav-link:hover::after {
+    width: 80%;
+}
+
+/* 英雄区域 */
+.hero {
+    background: linear-gradient(rgba(10, 20, 40, 0.9), rgba(10, 20, 40, 0.9)),
+                url('https://images.contentstack.io/v3/assets/blt187521ff0727be24/blt44f8f8c57166b402/60ee119e2c9b4e0d4f4a6d61/lol-gameplay-article-banner.jpg');
+    background-size: cover;
+    background-position: center;
+    padding: 6rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, transparent 0%, var(--lol-bg-darker) 100%);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero h1 {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, var(--lol-gold), var(--lol-gold-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 30px rgba(200, 170, 110, 0.3);
+}
+
+.hero-subtitle {
+    font-size: 1.5rem;
+    color: var(--lol-gold-light);
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin: 3rem 0;
+    flex-wrap: wrap;
+}
+
+.stat-card {
+    background: rgba(30, 42, 71, 0.6);
+    border: 1px solid rgba(200, 170, 110, 0.3);
+    border-radius: 15px;
+    padding: 2rem;
+    min-width: 180px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--lol-gold);
+    box-shadow: 0 10px 30px rgba(200, 170, 110, 0.2);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(to right, var(--lol-gold), var(--lol-blue));
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: bold;
+    color: var(--lol-gold);
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 20px rgba(200, 170, 110, 0.5);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--lol-gold-light);
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* 功能卡片 */
+.features {
+    padding: 5rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    color: var(--lol-gold);
+    position: relative;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 3px;
+    background: linear-gradient(to right, var(--lol-gold), var(--lol-blue));
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    background: rgba(30, 42, 71, 0.6);
+    border: 1px solid rgba(200, 170, 110, 0.2);
+    border-radius: 15px;
+    padding: 2.5rem;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--lol-gold);
+    box-shadow: 0 15px 40px rgba(200, 170, 110, 0.15);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    color: var(--lol-gold);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.feature-title {
+    font-size: 1.5rem;
+    color: var(--lol-gold-light);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.feature-desc {
+    color: var(--lol-gold-light);
+    opacity: 0.8;
+    text-align: center;
+    line-height: 1.6;
+}
+
+/* 按钮样式 */
+.btn {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, var(--lol-gold) 0%, var(--lol-gold-dark) 100%);
+    color: var(--lol-bg-darker);
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    font-size: 1.1rem;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(200, 170, 110, 0.4);
+    color: var(--lol-bg-darker);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--lol-gold) 0%, var(--lol-gold-dark) 100%);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--lol-blue) 0%, #0A8B82 100%);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--lol-gold);
+    color: var(--lol-gold);
+}
+
+.btn-outline:hover {
+    background: var(--lol-gold);
+    color: var(--lol-bg-darker);
+}
+
+/* 表格样式 */
+.table-container {
+    background: rgba(30, 42, 71, 0.6);
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 2rem 0;
+    border: 1px solid rgba(200, 170, 110, 0.2);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--lol-gold-light);
+}
+
+.data-table th {
+    background: rgba(200, 170, 110, 0.1);
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--lol-gold);
+    color: var(--lol-gold);
+}
+
+.data-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(200, 170, 110, 0.1);
+}
+
+.data-table tr:hover {
+    background: rgba(200, 170, 110, 0.05);
+}
+
+/* 页脚 */
+.footer {
+    background: var(--lol-bg-darker);
+    padding: 3rem 2rem;
+    margin-top: 5rem;
+    border-top: 2px solid var(--lol-gold);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 3rem;
+}
+
+.footer-section h3 {
+    color: var(--lol-gold);
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+}
+
+.footer-links {
+    list-style: none;
+}
+
+.footer-links li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-links a {
+    color: var(--lol-gold-light);
+    text-decoration: none;
+    transition: color 0.3s;
+    opacity: 0.8;
+}
+
+.footer-links a:hover {
+    color: var(--lol-gold);
+    opacity: 1;
+}
+
+.copyright {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(200, 170, 110, 0.2);
+    color: var(--lol-gold-light);
+    opacity: 0.6;
+    font-size: 0.9rem;
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(200, 170, 110, 0.5);
+    }
+    50% {
+        text-shadow: 0 0 20px rgba(200, 170, 110, 0.8), 0 0 30px rgba(200, 170, 110, 0.6);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.glow-text {
+    animation: glow 2s infinite;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .hero-stats {
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        min-width: 140px;
+        padding: 1.5rem;
+    }
+    
+    .nav-links {
+        gap: 1rem;
+    }
+    
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--lol-bg-darker);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--lol-gold);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--lol-gold-dark);
+}

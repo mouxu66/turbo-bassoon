@@ -544,6 +544,15 @@ def items_page():
         return render_template('items.html', items=items)
     except Exception as e:
         return render_template('error.html', error=str(e))
+
+# @app.route('/match_analysis')
+# def match_analysis():
+    """比赛数据分析页面"""
+    stats = get_match_statistics()
+    return render_template('match_analysis.html',
+                         stats=stats,
+                         has_data=stats is not None)
+
 @app.route('/match_results')
 def match_results():
     """分析结果页面"""

@@ -1,28 +1,216 @@
-# 简化首页模板，减少复杂度
-cat > /home/mouxu/templates/index.html << 'EOF'
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>LOL数据分析 - mouxu</title>
-    <meta charset="utf-8">
-    <style>
-        body { font-family: Arial; margin: 20px; }
-        .menu a { display: block; margin: 10px 0; padding: 10px; background: #007bff; color: white; text-decoration: none; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 英雄联盟数据分析中心</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <h1>英雄联盟数据分析</h1>
-    <p>数据统计：装备 {{ item_count }} 件，比赛 {{ match_count }} 场</p>
-    
-    <div class="menu">
-        <a href="/items">查看装备数据</a>
-        <a href="/match_analysis">比赛分析</a>
-        <a href="/upload">上传数据</a>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <i class="fas fa-crown"></i>
+                <span>LOL数据分析中心</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/" class="active"><i class="fas fa-home"></i> 首页</a></li>
+                <li><a href="/items"><i class="fas fa-helmet-battle"></i> 装备数据</a></li>
+                <li><a href="/match_analysis"><i class="fas fa-chart-line"></i> 比赛分析</a></li>
+                <li><a href="/upload"><i class="fas fa-upload"></i> 数据上传</a></li>
+                <li><a href="/about"><i class="fas fa-info-circle"></i> 关于</a></li>
+                <li><a href="https://github.com" target="_blank"><i class="fab fa-github"></i> GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 英雄区域 -->
+    <section class="hero">
+        <h1>英雄联盟数据分析中心</h1>
+        <p>深入挖掘游戏数据，洞察胜利之道。专业级的装备分析、比赛统计和战术洞察。</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+            <a href="/items" class="btn"><i class="fas fa-search"></i> 探索装备数据</a>
+            <a href="/upload" class="btn btn-secondary"><i class="fas fa-upload"></i> 上传比赛数据</a>
+        </div>
+    </section>
+
+    <!-- 搜索区域 -->
+    <div class="search-container">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="搜索装备名称或属性..." id="searchInput">
+        </div>
     </div>
+
+    <!-- 功能卡片 -->
+    <div class="card-grid">
+        <div class="card">
+            <h3><i class="fas fa-helmet-battle"></i> 装备数据库</h3>
+            <p>完整的英雄联盟装备数据，包含详细属性、价格和构建路径分析。</p>
+            <a href="/items" class="btn">浏览装备</a>
+        </div>
+        
+        <div class="card">
+            <h3><i class="fas fa-chart-line"></i> 比赛分析</h3>
+            <p>深入分析比赛数据，获取战术洞察和胜率预测。</p>
+            <a href="/match_analysis" class="btn">开始分析</a>
+        </div>
+        
+        <div class="card">
+            <h3><i class="fas fa-upload"></i> 数据上传</h3>
+            <p>上传您的比赛数据CSV文件，获取个性化分析报告。</p>
+            <a href="/upload" class="btn">上传数据</a>
+        </div>
+        
+        <div class="card">
+            <h3><i class="fas fa-rocket"></i> 实时统计</h3>
+            <p>基于最新游戏版本的实时数据统计和趋势分析。</p>
+            <a href="/match_analysis" class="btn">查看统计</a>
+        </div>
+    </div>
+
+    <!-- 数据统计 -->
+    <section style="padding: 4rem 2rem; background: rgba(30, 35, 40, 0.5);">
+        <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+            <h2 style="color: var(--lol-gold); margin-bottom: 3rem; font-size: 2.5rem;">数据中心</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
+                <div class="stat-card">
+                    <div style="font-size: 3rem; color: var(--lol-gold); margin-bottom: 1rem;">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3 style="color: var(--lol-gold-light);">装备总数</h3>
+                    <p style="font-size: 2rem; font-weight: bold; color: var(--lol-blue);" id="itemCount">加载中...</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div style="font-size: 3rem; color: var(--lol-blue); margin-bottom: 1rem;">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3 style="color: var(--lol-gold-light);">数据分析</h3>
+                    <p style="font-size: 2rem; font-weight: bold; color: var(--lol-gold);" id="analysisCount">100+</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div style="font-size: 3rem; color: var(--lol-red); margin-bottom: 1rem;">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 style="color: var(--lol-gold-light);">活跃用户</h3>
+                    <p style="font-size: 2rem; font-weight: bold; color: var(--lol-red);">500+</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div style="font-size: 3rem; color: var(--lol-purple); margin-bottom: 1rem;">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h3 style="color: var(--lol-gold-light);">更新日期</h3>
+                    <p style="font-size: 1.2rem; color: var(--text-secondary);" id="updateDate">2025/12/24</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>英雄联盟数据分析中心</h4>
+                <p style="color: var(--text-secondary); margin-top: 1rem;">
+                    专业级的英雄联盟数据分析平台，为玩家和战队提供深度数据洞察。
+                </p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>快速链接</h4>
+                <ul class="footer-links">
+                    <li><a href="/">首页</a></li>
+                    <li><a href="/items">装备数据</a></li>
+                    <li><a href="/match_analysis">比赛分析</a></li>
+                    <li><a href="/upload">数据上传</a></li>
+                    <li><a href="/about">关于我们</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>联系我们</h4>
+                <ul class="footer-links">
+                    <li><a href="mailto:contact@example.com"><i class="fas fa-envelope"></i> 邮箱联系</a></li>
+                    <li><a href="https://github.com"><i class="fab fa-github"></i> GitHub</a></li>
+                    <li><a href="#"><i class="fab fa-discord"></i> Discord社区</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>数据来源</h4>
+                <p style="color: var(--text-secondary);">
+                    数据基于Riot Games API和社区贡献，定期更新确保准确性。
+                </p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(200, 170, 110, 0.2);">
+            <p style="color: var(--text-secondary);">
+                &copy; 2025 英雄联盟数据分析中心. 此网站与Riot Games无关，所有游戏内容属于其各自所有者。
+            </p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 更新日期
+        document.getElementById('updateDate').textContent = new Date().toLocaleDateString('zh-CN');
+        
+        // 搜索功能
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value.trim();
+                if (query) {
+                    window.location.href = '/items?search=' + encodeURIComponent(query);
+                }
+            }
+        });
+        
+        // 加载装备数量
+        fetch('/api/items/count')
+            .then(response => response.json())
+            .then(data => {
+                if (data.count !== undefined) {
+                    document.getElementById('itemCount').textContent = data.count;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading item count:', error);
+                document.getElementById('itemCount').textContent = '200+';
+            });
+            
+        // 添加卡片悬停效果
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
     
-    <p style="margin-top: 30px; font-size: 0.9em; color: #666;">
-        PythonAnywhere免费账户 - CPU使用已优化
-    </p>
+    <style>
+        .stat-card {
+            background: rgba(30, 35, 40, 0.7);
+            border-radius: 10px;
+            padding: 2rem;
+            border: 1px solid rgba(200, 170, 110, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--lol-gold);
+        }
+    </style>
 </body>
 </html>
-EOF
