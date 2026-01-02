@@ -1,29 +1,38 @@
-# Python
+# Python编译文件
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
 
-# 数据库
-*.db
-*.sqlite3
-instance/
-
-# 上传文件
-uploads/
-
-# 环境
-env/
+# 虚拟环境
 venv/
+env/
 .venv/
 
-# 日志
-*.log
+# 数据库文件
+*.db
+*.sqlite
+instance/
 
-# 系统文件
+# 上传的文件
+uploads/
+tmp/
+temp/
+
+# 日志文件
+*.log
+logs/
+
+# PythonAnywhere特定文件
+reload.txt
+.pythonanywhere/
+
+# 操作系统文件
 .DS_Store
 Thumbs.db
 
-# PythonAnywhere特定
-.pythonstartup.py
+# IDE文件
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-01-01T08:58:40.781792",
+  "champions": [
+    {
+      "name": "Ahri",
+      "win_rate": 48.8,
+      "pick_rate": 12.7,
+      "tier": "S"
+    },
+    {
+      "name": "Zed",
+      "win_rate": 52.8,
+      "pick_rate": 18.4,
+      "tier": "S"
+    },
+    {
+      "name": "Jinx",
+      "win_rate": 54.7,
+      "pick_rate": 13.2,
+      "tier": "B"
+    },
+    {
+      "name": "Garen",
+      "win_rate": 52.1,
+      "pick_rate": 14.2,
+      "tier": "S"
+    },
+    {
+      "name": "Lux",
+      "win_rate": 48.9,
+      "pick_rate": 5.9,
+      "tier": "A"
+    },
+    {
+      "name": "Yasuo",
+      "win_rate": 49.8,
+      "pick_rate": 15.2,
+      "tier": "A"
+    }
+  ],
+  "players": [
+    {
+      "name": "Faker",
+      "region": "KR",
+      "team": "T1"
+    },
+    {
+      "name": "Doublelift",
+      "region": "NA",
+      "team": "retired"
+    },
+    {
+      "name": "Caps",
+      "region": "EU",
+      "team": "G2"
+    }
+  ],
+  "note": "作业项目演示数据 - 非实时"
+}

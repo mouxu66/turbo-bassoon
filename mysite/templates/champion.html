@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ champion.name }} - 详情</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .back-btn { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="back-btn">
+        <a href="/">← 返回列表</a>
+    </div>
+    
+    <h1>{{ champion.name }} - {{ champion.title }}</h1>
+    <p><strong>定位:</strong> {{ champion.tags|join(', ') }}</p>
+    <p><strong>背景故事:</strong> {{ champion.lore }}</p>
+    
+    <div style="margin-top: 20px; padding: 10px; background: #f0f0f0;">
+        <p>更多数据分析功能开发中...</p>
+    </div>
+    
+    <footer style="margin-top: 30px; color: #666;">
+        <p>英雄联盟数据分析站 © {{ now }}</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub开源LoL项目 - 英雄联盟数据分析</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --github-black: #24292e;
+            --github-blue: #0366d6;
+            --github-green: #28a745;
+            --github-gray: #6a737d;
+        }
+        .github-header {
+            background: var(--github-black);
+            color: white;
+            padding: 60px 0;
+        }
+        .project-card {
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        .language-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #f1f8ff;
+            color: var(--github-blue);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .star-badge {
+            background: #fafbfc;
+            border: 1px solid #e1e4e8;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .github-icon {
+            color: var(--github-black);
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <svg height="24" viewBox="0 0 16 16" version="1.1" width="24" fill="white" class="github-icon">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+                GitHub开源项目
+            </a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/">首页</a>
+                <a class="nav-link active" href="/github">开源项目</a>
+                <a class="nav-link" href="/github/how-to-use">使用指南</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 头部 -->
+    <header class="github-header text-center">
+        <div class="container">
+            <h1 class="display-4 mb-3">GitHub开源LoL项目</h1>
+            <p class="lead mb-4">精选的英雄联盟相关开源项目，助力你的数据分析</p>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="alert alert-info">
+                        <h5>📚 资源宝库</h5>
+                        <p class="mb-0">这里收集了GitHub上优秀的英雄联盟相关开源项目，可以直接集成到你的项目中。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 项目展示 -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h2>精选开源项目 <span class="badge bg-secondary">{{ count }}个</span></h2>
+                    <p class="text-muted">这些项目都经过筛选，有良好的维护和文档</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="/github/how-to-use" class="btn btn-outline-primary">
+                        📖 查看使用指南
+                    </a>
+                    <button onclick="loadProjects()" class="btn btn-outline-secondary">
+                        🔄 刷新数据
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row" id="projects-container">
+                {% for project in projects %}
+                <div class="col-lg-6 mb-4">
+                    <div class="project-card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h4 class="mb-1">{{ project.name }}</h4>
+                                <p class="text-muted mb-1">by {{ project.owner }}</p>
+                            </div>
+                            <div>
+                                <span class="star-badge">⭐ {{ project.stars }}</span>
+                            </div>
+                        </div>
+                        
+                        <p class="mb-3">{{ project.description }}</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="language-badge">{{ project.language }}</span>
+                            </div>
+                            <div>
+                                <a href="{{ project.url }}" target="_blank" class="btn btn-sm btn-primary">
+                                    访问项目
+                                </a>
+                                <button onclick="copyUrl('{{ project.url }}')" class="btn btn-sm btn-outline-secondary">
+                                    复制链接
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- 搜索功能（演示） -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">🔍 搜索更多项目（演示功能）</h5>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <input type="text" id="search-input" class="form-control" 
+                               placeholder="输入关键词，如：lol data analysis、riot api">
+                        <button class="btn btn-primary" onclick="searchProjects()">搜索GitHub</button>
+                    </div>
+                    <div id="search-results" class="mt-3">
+                        <div class="alert alert-info">
+                            <p class="mb-0">演示模式：实际搜索需要GitHub API token</p>
+                            <p class="mb-0">试试搜索：<code>league of legends api</code>、<code>lol stats</code></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- API信息 -->
+            <div class="alert alert-secondary mt-4">
+                <h5>💡 如何集成到你的项目？</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Python项目集成示例：</h6>
+                        <pre class="bg-light p-3"><code># 使用riotwatcher
+pip install riotwatcher
+
+from riotwatcher import LolWatcher
+watcher = LolWatcher(api_key='你的密钥')
+player = watcher.summoner.by_name('na1', '玩家名')</code></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>JavaScript项目集成示例：</h6>
+                        <pre class="bg-light p-3"><code>// 使用lol-js
+npm install lol-js
+
+import { LolApi } from 'lol-js';
+const api = new LolApi('你的密钥');
+api.Summoner.getByName('玩家名', 'na1');</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>相关链接</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="https://github.com/topics/league-of-legends" class="text-white-50" target="_blank">GitHub League of Legends Topics</a></li>
+                        <li><a href="https://developer.riotgames.com/" class="text-white-50" target="_blank">Riot Games官方API</a></li>
+                        <li><a href="https://github.com/trending?l=python&since=daily" class="text-white-50" target="_blank">GitHub Python趋势项目</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>数据说明</h5>
+                    <p class="text-white-50">项目数据为精选列表，实际GitHub API需要认证token。</p>
+                    <p class="text-white-50">最后更新: {{ timestamp }}</p>
+                </div>
+            </div>
+            <hr class="bg-light">
+            <p class="text-center mb-0">
+                © 2024 英雄联盟数据分析平台 | 
+                <a href="/" class="text-warning">返回首页</a> |
+                <a href="/about" class="text-warning">关于项目</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 复制URL到剪贴板
+        function copyUrl(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('项目链接已复制到剪贴板！');
+            });
+        }
+        
+        // 加载项目数据（API调用）
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/github/projects');
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`已加载 ${data.count} 个项目`);
+                }
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
+        }
+        
+        // 搜索项目（演示）
+        async function searchProjects() {
+            const input = document.getElementById('search-input');
+            const query = input.value.trim();
+            
+            if (!query) {
+                alert('请输入搜索关键词');
+                return;
+            }
+            
+            const resultsDiv = document.getElementById('search-results');
+            resultsDiv.innerHTML = `
+                <div class="alert alert-warning">
+                    <h6>搜索: ${query}</h6>
+                    <p>演示模式：实际搜索需要GitHub API token</p>
+                    <p>建议直接访问: 
+                        <a href="https://github.com/search?q=${encodeURIComponent(query)}" target="_blank">
+                            https://github.com/search?q=${encodeURIComponent(query)}
+                        </a>
+                    </p>
+                </div>
+            `;
+            
+            // 演示API调用
+            try {
+                const response = await fetch(`/api/github/search/${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    let resultsHtml = `<h6>搜索结果 (${data.count}个):</h6>`;
+                    data.results.forEach(project => {
+                        resultsHtml += `
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <h6>${project.name}</h6>
+                                    <p class="mb-1">${project.description}</p>
+                                    <small class="text-muted">语言: ${project.language} | ⭐ ${project.stargazers_count}</small>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    resultsDiv.innerHTML = resultsHtml;
+                }
+            } catch (error) {
+                console.error('搜索失败:', error);
+            }
+        }
+        
+        // 页面加载时显示信息
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('GitHub项目页面加载完成');
+        });
+    </script>
+</body>
+</html>

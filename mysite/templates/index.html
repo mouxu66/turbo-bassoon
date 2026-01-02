@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>英雄联盟数据站</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>🏆 英雄联盟数据站</h1>
+    <p>版本: {{ version }} | 更新时间: {{ now }}</p>
+    
+    <table>
+        <tr>
+            <th>英雄</th>
+            <th>称号</th>
+            <th>胜率</th>
+            <th>选取率</th>
+            <th>层级</th>
+            <th>定位</th>
+        </tr>
+        {% for champ in champions %}
+        <tr>
+            <td><a href="/champion/{{ champ.name }}">{{ champ.name }}</a></td>
+            <td>{{ champ.title }}</td>
+            <td>{{ champ.win_rate }}%</td>
+            <td>{{ champ.pick_rate }}%</td>
+            <td>{{ champ.tier }}级</td>
+            <td>{{ champ.tags|join(', ') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+    <div style="margin-top: 20px;">
+        <a href="/api/health">检查API状态</a>
+    </div>
+</body>
+</html>
